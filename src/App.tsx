@@ -1,50 +1,57 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
-import "./App.css";
+import { NextUIProvider } from "@nextui-org/react";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
+import { Button, Card, CardBody, CardHeader } from "@nextui-org/react";
+import { ThemeSwitch } from "./components/ThemeSwitch";
 
 function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
-
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <NextUIProvider>
+      <NextThemesProvider attribute="class" defaultTheme="system">
+        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+          {/* 主题切换按钮 - 固定在右上角 */}
+          <div className="fixed top-4 right-4 z-50">
+            <ThemeSwitch />
+          </div>
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
+          <div className="p-8">
+            <div className="max-w-4xl mx-auto">
+              <h1 className="text-4xl font-bold mb-8 text-foreground">
+                LightSync - 轻量级文件同步工具
+              </h1>
+            
+            <Card className="mb-4">
+              <CardHeader className="flex gap-3">
+                <div className="flex flex-col">
+                  <p className="text-md font-semibold">项目初始化完成</p>
+                  <p className="text-small text-default-500">Task 1.1 配置验证</p>
+                </div>
+              </CardHeader>
+              <CardBody>
+                <div className="space-y-2">
+                  <p className="text-sm">✅ package.json 依赖配置完成</p>
+                  <p className="text-sm">✅ Cargo.toml 依赖配置完成</p>
+                  <p className="text-sm">✅ tauri.conf.json 配置完成</p>
+                  <p className="text-sm">✅ TailwindCSS + NextUI 配置完成</p>
+                </div>
+              </CardBody>
+            </Card>
 
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+              <div className="flex gap-4">
+                <Button color="primary" variant="solid">
+                  Primary Button
+                </Button>
+                <Button color="secondary" variant="bordered">
+                  Secondary Button
+                </Button>
+                <Button color="success" variant="flat">
+                  Success Button
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </NextThemesProvider>
+    </NextUIProvider>
   );
 }
 
