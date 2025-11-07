@@ -1,5 +1,11 @@
 // 统一错误处理模块
 mod error;
+// 配置管理模块
+mod config;
+// 配置文件监听模块
+mod config_watcher;
+// 常量定义模块
+mod constants;
 
 // 公开导出错误类型，供其他模块使用
 pub use error::{Result, SyncError};
@@ -28,10 +34,22 @@ fn test_error_failure() -> Result<String> {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_fs::init())
         .invoke_handler(tauri::generate_handler![
             greet,
             test_error_success,
-            test_error_failure
+            test_error_failure,
+            // 配置管理命令
+            config::init_config,
+            config::get_config,
+            config::update_config,
+            config::get_config_value,
+            config::set_config_value,
+            config::reset_config,
+            // 配置文件监听命令
+            config_watcher::start_config_watcher,
+            config_watcher::stop_config_watcher,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
