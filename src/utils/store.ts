@@ -6,15 +6,15 @@
 
 import { invoke } from '@tauri-apps/api/core';
 import { Store } from '@tauri-apps/plugin-store';
+import type { AppConfig, ConfigUpdate } from '../types/config';
 
 // 配置存储实例
-let storeInstance = null;
+let storeInstance: Store | null = null;
 
 /**
  * 获取 Store 实例
- * @returns {Promise<Store>}
  */
-export async function getStore() {
+export async function getStore(): Promise<Store> {
   if (!storeInstance) {
     storeInstance = await Store.load('config.json');
   }
@@ -23,11 +23,10 @@ export async function getStore() {
 
 /**
  * 初始化配置
- * @returns {Promise<Object>} 配置对象
  */
-export async function initConfig() {
+export async function initConfig(): Promise<AppConfig> {
   try {
-    const config = await invoke('init_config');
+    const config = await invoke<AppConfig>('init_config');
     return config;
   } catch (error) {
     console.error('Failed to initialize config:', error);
@@ -37,11 +36,10 @@ export async function initConfig() {
 
 /**
  * 获取完整配置
- * @returns {Promise<Object>} 配置对象
  */
-export async function getConfig() {
+export async function getConfig(): Promise<AppConfig> {
   try {
-    const config = await invoke('get_config');
+    const config = await invoke<AppConfig>('get_config');
     return config;
   } catch (error) {
     console.error('Failed to get config:', error);
@@ -51,10 +49,8 @@ export async function getConfig() {
 
 /**
  * 更新配置
- * @param {Object} config - 配置对象
- * @returns {Promise<void>}
  */
-export async function updateConfig(config) {
+export async function updateConfig(config: AppConfig): Promise<void> {
   try {
     await invoke('update_config', { config });
   } catch (error) {
@@ -65,12 +61,10 @@ export async function updateConfig(config) {
 
 /**
  * 获取指定配置项
- * @param {string} key - 配置键
- * @returns {Promise<any>} 配置值
  */
-export async function getConfigValue(key) {
+export async function getConfigValue<T = unknown>(key: string): Promise<T> {
   try {
-    const value = await invoke('get_config_value', { key });
+    const value = await invoke<T>('get_config_value', { key });
     return value;
   } catch (error) {
     console.error(`Failed to get config value for key '${key}':`, error);
@@ -80,11 +74,8 @@ export async function getConfigValue(key) {
 
 /**
  * 设置指定配置项
- * @param {string} key - 配置键
- * @param {any} value - 配置值
- * @returns {Promise<void>}
  */
-export async function setConfigValue(key, value) {
+export async function setConfigValue(key: string, value: unknown): Promise<void> {
   try {
     await invoke('set_config_value', { key, value });
   } catch (error) {
@@ -95,11 +86,10 @@ export async function setConfigValue(key, value) {
 
 /**
  * 重置配置为默认值
- * @returns {Promise<Object>} 默认配置对象
  */
-export async function resetConfig() {
+export async function resetConfig(): Promise<AppConfig> {
   try {
-    const config = await invoke('reset_config');
+    const config = await invoke<AppConfig>('reset_config');
     return config;
   } catch (error) {
     console.error('Failed to reset config:', error);
@@ -109,15 +99,15 @@ export async function resetConfig() {
 
 /**
  * 监听配置变化
- * @param {Function} callback - 回调函数
- * @returns {Function} 取消监听函数
  */
-export async function watchConfig(callback) {
+export async function watchConfig(
+  callback: (value: AppConfig) => void
+): Promise<() => void> {
   const store = await getStore();
   
   // 使用 Store 的 onChange 事件监听
-  const unsubscribe = await store.onChange((key, value) => {
-    if (key === 'app_config') {
+  const unsubscribe = await store.onChange<AppConfig>((key, value) => {
+    if (key === 'app_config' && value) {
       callback(value);
     }
   });
@@ -127,13 +117,11 @@ export async function watchConfig(callback) {
 
 /**
  * 批量更新配置项
- * @param {Object} updates - 要更新的配置项对象
- * @returns {Promise<void>}
  */
-export async function batchUpdateConfig(updates) {
+export async function batchUpdateConfig(updates: ConfigUpdate): Promise<void> {
   try {
     const config = await getConfig();
-    const updatedConfig = { ...config, ...updates };
+    const updatedConfig: AppConfig = { ...config, ...updates };
     await updateConfig(updatedConfig);
   } catch (error) {
     console.error('Failed to batch update config:', error);
@@ -143,9 +131,8 @@ export async function batchUpdateConfig(updates) {
 
 /**
  * 导出配置到 JSON 字符串
- * @returns {Promise<string>} JSON 字符串
  */
-export async function exportConfig() {
+export async function exportConfig(): Promise<string> {
   try {
     const config = await getConfig();
     return JSON.stringify(config, null, 2);
@@ -157,12 +144,10 @@ export async function exportConfig() {
 
 /**
  * 从 JSON 字符串导入配置
- * @param {string} jsonString - JSON 字符串
- * @returns {Promise<void>}
  */
-export async function importConfig(jsonString) {
+export async function importConfig(jsonString: string): Promise<void> {
   try {
-    const config = JSON.parse(jsonString);
+    const config = JSON.parse(jsonString) as AppConfig;
     await updateConfig(config);
   } catch (error) {
     console.error('Failed to import config:', error);

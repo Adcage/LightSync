@@ -7,6 +7,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardBody, CardHeader, Button, Input, Divider, Spinner } from '@nextui-org/react';
 import { useConfig, useLanguage, useTheme, useSyncFolders, useWebDavServers } from '../hooks/useConfig';
+import type { SyncFolderConfig, WebDavServerConfig } from '../types/config';
 import { invoke } from '@tauri-apps/api/core';
 
 export default function ConfigTest() {
@@ -103,7 +104,7 @@ export default function ConfigTest() {
 
   const testAddSyncFolder = async () => {
     try {
-      const newFolder = {
+      const newFolder: SyncFolderConfig = {
         id: `folder-${Date.now()}`,
         name: '测试文件夹',
         localPath: '/test/local',
@@ -124,7 +125,7 @@ export default function ConfigTest() {
 
   const testAddWebDavServer = async () => {
     try {
-      const newServer = {
+      const newServer: WebDavServerConfig = {
         id: `server-${Date.now()}`,
         name: '测试服务器',
         url: 'https://webdav.example.com',

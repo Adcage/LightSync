@@ -1,0 +1,36 @@
+/* 自定义标题栏样式 */
+
+/* 确保拖拽区域在整个标题栏上工作 */
+[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+/* 按钮不应该是拖拽区域 */
+[data-tauri-drag-region] button {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
+/* Windows 特定样式优化 */
+@media (platform: windows) {
+  .titlebar-button {
+    width: 46px;
+  }
+}
+
+/* 平滑过渡效果 */
+.titlebar-button {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* 关闭按钮悬停效果 */
+.titlebar-close-button:hover {
+  background-color: #e81123;
+  color: white;
+}
+
+.titlebar-close-button:active {
+  background-color: #c50f1f;
+}
+

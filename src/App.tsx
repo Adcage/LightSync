@@ -1,24 +1,36 @@
 import { NextUIProvider } from "@nextui-org/react";
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import { ThemeSwitch } from "./components/ThemeSwitch";
+import { TitleBar } from "./components/TitleBar";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import ConfigTest from "./components/ConfigTest";
+import DatabaseTest from "./components/DatabaseTest";
 
 function App() {
   return (
-    <NextUIProvider>
-      <NextThemesProvider attribute="class" defaultTheme="system">
-        <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-          {/* 主题切换按钮 - 固定在右上角 */}
-          <div className="fixed top-4 right-4 z-50">
-            <ThemeSwitch />
-          </div>
+    <ErrorBoundary>
+      <NextUIProvider>
+        <NextThemesProvider attribute="class" defaultTheme="light">
+          <div className="h-screen flex flex-col bg-gray-50 dark:bg-zinc-950 text-gray-900 dark:text-gray-100 overflow-hidden">
+            {/* 自定义标题栏 */}
+            <TitleBar />
 
-          <div className="p-8">
-            <ConfigTest />
+            {/* 主内容区域 */}
+            <div className="flex-1 overflow-auto bg-gray-50 dark:bg-zinc-950">
+              {/* 主题切换按钮 - 固定在右上角 */}
+              <div className="fixed top-14 right-4 z-50">
+                <ThemeSwitch />
+              </div>
+
+              <div className="p-8 space-y-8">
+                <DatabaseTest />
+                <ConfigTest />
+              </div>
+            </div>
           </div>
-        </div>
-      </NextThemesProvider>
-    </NextUIProvider>
+        </NextThemesProvider>
+      </NextUIProvider>
+    </ErrorBoundary>
   );
 }
 

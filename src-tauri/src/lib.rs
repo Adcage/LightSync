@@ -6,6 +6,8 @@ mod config;
 mod config_watcher;
 // 常量定义模块
 mod constants;
+// 数据库操作模块
+mod database;
 
 // 公开导出错误类型，供其他模块使用
 pub use error::{Result, SyncError};
@@ -36,6 +38,21 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
+        .plugin(
+            tauri_plugin_sql::Builder::new()
+                .add_migrations(
+                    "sqlite:lightsync.db",
+                    vec![
+                        tauri_plugin_sql::Migration {
+                            version: 1,
+                            description: "initial database schema",
+                            sql: include_str!("../migrations/001_initial.sql"),
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
+                    ],
+                )
+                .build(),
+        )
         .invoke_handler(tauri::generate_handler![
             greet,
             test_error_success,

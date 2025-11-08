@@ -15,15 +15,37 @@ import {
   watchConfig,
   batchUpdateConfig,
 } from '../utils/store';
+import type {
+  AppConfig,
+  ConfigUpdate,
+  SyncFolderConfig,
+  SyncFolderUpdate,
+  WebDavServerConfig,
+  WebDavServerUpdate,
+} from '../types/config';
+
+/**
+ * 配置管理 Hook 返回类型
+ */
+interface UseConfigReturn {
+  config: AppConfig | null;
+  loading: boolean;
+  error: Error | null;
+  refresh: () => Promise<void>;
+  update: (newConfig: AppConfig) => Promise<void>;
+  getValue: <T = unknown>(key: string) => Promise<T>;
+  setValue: (key: string, value: unknown) => Promise<void>;
+  batchUpdate: (updates: ConfigUpdate) => Promise<void>;
+  reset: () => Promise<void>;
+}
 
 /**
  * 配置管理 Hook
- * @returns {Object} 配置状态和操作方法
  */
-export function useConfig() {
-  const [config, setConfig] = useState(null);
+export function useConfig(): UseConfigReturn {
+  const [config, setConfig] = useState<AppConfig | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<Error | null>(null);
 
   // 初始化配置
   useEffect(() => {
@@ -34,7 +56,7 @@ export function useConfig() {
         setConfig(initialConfig);
         setError(null);
       } catch (err) {
-        setError(err);
+        setError(err as Error);
         console.error('Failed to initialize config:', err);
       } finally {
         setLoading(false);
@@ -46,7 +68,7 @@ export function useConfig() {
 
   // 监听配置变化
   useEffect(() => {
-    let unsubscribe = null;
+    let unsubscribe: (() => void) | null = null;
 
     const setupWatcher = async () => {
       try {
@@ -77,7 +99,7 @@ export function useConfig() {
       setConfig(latestConfig);
       setError(null);
     } catch (err) {
-      setError(err);
+      setError(err as Error);
       console.error('Failed to refresh config:', err);
     } finally {
       setLoading(false);
@@ -85,22 +107,22 @@ export function useConfig() {
   }, []);
 
   // 更新完整配置
-  const update = useCallback(async (newConfig) => {
+  const update = useCallback(async (newConfig: AppConfig) => {
     try {
       await updateConfig(newConfig);
       setConfig(newConfig);
       setError(null);
     } catch (err) {
-      setError(err);
+      setError(err as Error);
       console.error('Failed to update config:', err);
       throw err;
     }
   }, []);
 
   // 获取配置项
-  const getValue = useCallback(async (key) => {
+  const getValue = useCallback(async <T = unknown,>(key: string): Promise<T> => {
     try {
-      const value = await getConfigValue(key);
+      const value = await getConfigValue<T>(key);
       return value;
     } catch (err) {
       console.error(`Failed to get config value for key '${key}':`, err);
@@ -109,28 +131,28 @@ export function useConfig() {
   }, []);
 
   // 设置配置项
-  const setValue = useCallback(async (key, value) => {
+  const setValue = useCallback(async (key: string, value: unknown) => {
     try {
       await setConfigValue(key, value);
       // 刷新配置以保持同步
       await refresh();
       setError(null);
     } catch (err) {
-      setError(err);
+      setError(err as Error);
       console.error(`Failed to set config value for key '${key}':`, err);
       throw err;
     }
   }, [refresh]);
 
   // 批量更新
-  const batchUpdate = useCallback(async (updates) => {
+  const batchUpdate = useCallback(async (updates: ConfigUpdate) => {
     try {
       await batchUpdateConfig(updates);
       // 刷新配置以保持同步
       await refresh();
       setError(null);
     } catch (err) {
-      setError(err);
+      setError(err as Error);
       console.error('Failed to batch update config:', err);
       throw err;
     }
@@ -143,7 +165,7 @@ export function useConfig() {
       setConfig(defaultConfig);
       setError(null);
     } catch (err) {
-      setError(err);
+      setError(err as Error);
       console.error('Failed to reset config:', err);
       throw err;
     }
@@ -163,13 +185,18 @@ export function useConfig() {
 }
 
 /**
- * 配置项 Hook
- * @param {string} key - 配置键
- * @param {any} defaultValue - 默认值
- * @returns {[any, Function]} [值, 设置函数]
+ * 配置项 Hook 返回类型
  */
-export function useConfigValue(key, defaultValue = null) {
-  const [value, setValueState] = useState(defaultValue);
+type UseConfigValueReturn<T> = [T, (newValue: T) => Promise<void>, boolean];
+
+/**
+ * 配置项 Hook
+ */
+export function useConfigValue<T = unknown>(
+  key: string,
+  defaultValue: T
+): UseConfigValueReturn<T> {
+  const [value, setValueState] = useState<T>(defaultValue);
   const [loading, setLoading] = useState(true);
 
   // 获取初始值
@@ -177,7 +204,7 @@ export function useConfigValue(key, defaultValue = null) {
     const fetchValue = async () => {
       try {
         setLoading(true);
-        const fetchedValue = await getConfigValue(key);
+        const fetchedValue = await getConfigValue<T>(key);
         setValueState(fetchedValue);
       } catch (err) {
         console.error(`Failed to fetch config value for key '${key}':`, err);
@@ -192,7 +219,7 @@ export function useConfigValue(key, defaultValue = null) {
 
   // 设置值
   const setValue = useCallback(
-    async (newValue) => {
+    async (newValue: T) => {
       try {
         await setConfigValue(key, newValue);
         setValueState(newValue);
@@ -209,45 +236,49 @@ export function useConfigValue(key, defaultValue = null) {
 
 /**
  * 语言配置 Hook
- * @returns {[string, Function]} [语言, 设置语言函数]
  */
-export function useLanguage() {
-  const [language, setLanguage, loading] = useConfigValue('language', 'zh-CN');
-  return [language, setLanguage, loading];
+export function useLanguage(): UseConfigValueReturn<string> {
+  return useConfigValue<string>('language', 'zh-CN');
 }
 
 /**
  * 主题配置 Hook
- * @returns {[string, Function]} [主题, 设置主题函数]
  */
-export function useTheme() {
-  const [theme, setTheme, loading] = useConfigValue('theme', 'system');
-  return [theme, setTheme, loading];
+export function useTheme(): UseConfigValueReturn<string> {
+  return useConfigValue<string>('theme', 'system');
 }
 
 /**
  * 自动启动配置 Hook
- * @returns {[boolean, Function]} [是否自动启动, 设置函数]
  */
-export function useAutoStart() {
-  const [autoStart, setAutoStart, loading] = useConfigValue('autoStart', false);
-  return [autoStart, setAutoStart, loading];
+export function useAutoStart(): UseConfigValueReturn<boolean> {
+  return useConfigValue<boolean>('autoStart', false);
+}
+
+/**
+ * 同步文件夹 Hook 返回类型
+ */
+interface UseSyncFoldersReturn {
+  syncFolders: SyncFolderConfig[];
+  addSyncFolder: (folderConfig: SyncFolderConfig) => Promise<void>;
+  updateSyncFolder: (id: string, updates: SyncFolderUpdate) => Promise<void>;
+  removeSyncFolder: (id: string) => Promise<void>;
+  loading: boolean;
 }
 
 /**
  * 同步文件夹配置 Hook
- * @returns {Object} 同步文件夹状态和操作方法
  */
-export function useSyncFolders() {
+export function useSyncFolders(): UseSyncFoldersReturn {
   const { config, update, loading } = useConfig();
   const syncFolders = config?.syncFolders || [];
 
   // 添加同步文件夹
   const addSyncFolder = useCallback(
-    async (folderConfig) => {
+    async (folderConfig: SyncFolderConfig) => {
       if (!config) return;
       
-      const newConfig = {
+      const newConfig: AppConfig = {
         ...config,
         syncFolders: [...config.syncFolders, folderConfig],
       };
@@ -258,10 +289,10 @@ export function useSyncFolders() {
 
   // 更新同步文件夹
   const updateSyncFolder = useCallback(
-    async (id, updates) => {
+    async (id: string, updates: SyncFolderUpdate) => {
       if (!config) return;
 
-      const newConfig = {
+      const newConfig: AppConfig = {
         ...config,
         syncFolders: config.syncFolders.map((folder) =>
           folder.id === id ? { ...folder, ...updates } : folder
@@ -274,10 +305,10 @@ export function useSyncFolders() {
 
   // 删除同步文件夹
   const removeSyncFolder = useCallback(
-    async (id) => {
+    async (id: string) => {
       if (!config) return;
 
-      const newConfig = {
+      const newConfig: AppConfig = {
         ...config,
         syncFolders: config.syncFolders.filter((folder) => folder.id !== id),
       };
@@ -296,19 +327,29 @@ export function useSyncFolders() {
 }
 
 /**
- * WebDAV 服务器配置 Hook
- * @returns {Object} 服务器配置状态和操作方法
+ * WebDAV 服务器 Hook 返回类型
  */
-export function useWebDavServers() {
+interface UseWebDavServersReturn {
+  webdavServers: WebDavServerConfig[];
+  addServer: (serverConfig: WebDavServerConfig) => Promise<void>;
+  updateServer: (id: string, updates: WebDavServerUpdate) => Promise<void>;
+  removeServer: (id: string) => Promise<void>;
+  loading: boolean;
+}
+
+/**
+ * WebDAV 服务器配置 Hook
+ */
+export function useWebDavServers(): UseWebDavServersReturn {
   const { config, update, loading } = useConfig();
   const webdavServers = config?.webdavServers || [];
 
   // 添加服务器
   const addServer = useCallback(
-    async (serverConfig) => {
+    async (serverConfig: WebDavServerConfig) => {
       if (!config) return;
 
-      const newConfig = {
+      const newConfig: AppConfig = {
         ...config,
         webdavServers: [...config.webdavServers, serverConfig],
       };
@@ -319,10 +360,10 @@ export function useWebDavServers() {
 
   // 更新服务器
   const updateServer = useCallback(
-    async (id, updates) => {
+    async (id: string, updates: WebDavServerUpdate) => {
       if (!config) return;
 
-      const newConfig = {
+      const newConfig: AppConfig = {
         ...config,
         webdavServers: config.webdavServers.map((server) =>
           server.id === id ? { ...server, ...updates } : server
@@ -335,10 +376,10 @@ export function useWebDavServers() {
 
   // 删除服务器
   const removeServer = useCallback(
-    async (id) => {
+    async (id: string) => {
       if (!config) return;
 
-      const newConfig = {
+      const newConfig: AppConfig = {
         ...config,
         webdavServers: config.webdavServers.filter((server) => server.id !== id),
       };
