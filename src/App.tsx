@@ -5,6 +5,8 @@ import { TitleBar } from "./components/TitleBar";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import ConfigTest from "./components/ConfigTest";
 import DatabaseTest from "./components/DatabaseTest";
+import LanguageSwitch from "./components/LanguageSwitch";
+import LanguageTest from "./components/LanguageTest";
 
 function App() {
   return (
@@ -22,7 +24,12 @@ function App() {
                 <ThemeSwitch />
               </div>
 
+              <div className="fixed top-14 right-20 z-50">
+                <LanguageSwitch />
+              </div>
+
               <div className="p-8 space-y-8">
+                <LanguageTest />
                 <DatabaseTest />
                 <ConfigTest />
               </div>
