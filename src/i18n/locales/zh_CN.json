@@ -467,6 +467,29 @@
             "copy_text": "复制",
             "delete_newline": "删除换行",
             "delete_space": "删除空格"
+        },
+        "home": {
+            "title": "LightSync",
+            "subtitle": "轻量级跨设备文件同步工具，基于 WebDAV 协议实现高效、安全、可定制的文件同步",
+            "quickActions": {
+                "syncFolders": "同步文件夹",
+                "syncFoldersDesc": "配置和管理同步文件夹",
+                "webdavServers": "WebDAV 服务器",
+                "webdavServersDesc": "配置云端服务器连接",
+                "syncStatus": "同步状态",
+                "syncStatusDesc": "查看同步进度和历史记录",
+                "settings": "设置",
+                "settingsDesc": "应用配置和偏好设置"
+            },
+            "systemStatus": {
+                "title": "系统状态",
+                "activeSyncs": "活跃同步",
+                "syncedFiles": "已同步文件",
+                "transferred": "已传输数据"
+            },
+            "devTests": {
+                "title": "开发者测试"
+            }
         }
     }
 }

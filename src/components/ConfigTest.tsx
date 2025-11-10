@@ -11,7 +11,7 @@ import type { SyncFolderConfig, WebDavServerConfig } from '../types/config';
 import { invoke } from '@tauri-apps/api/core';
 
 export default function ConfigTest() {
-  const { config, loading, error, refresh, update, setValue, reset } = useConfig();
+  const { config, loading, error, refresh, reset } = useConfig();
   const [language, setLanguage, langLoading] = useLanguage();
   const [theme, setTheme, themeLoading] = useTheme();
   const { syncFolders, addSyncFolder, removeSyncFolder } = useSyncFolders();

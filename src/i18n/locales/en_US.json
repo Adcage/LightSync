@@ -467,6 +467,29 @@
             "copy_text": "Copy",
             "delete_newline": "Delete Newline",
             "delete_space": "Delete Space"
+        },
+        "home": {
+            "title": "LightSync",
+            "subtitle": "Lightweight cross-device file synchronization tool based on WebDAV protocol for efficient, secure, and customizable file synchronization",
+            "quickActions": {
+                "syncFolders": "Sync Folders",
+                "syncFoldersDesc": "Configure and manage sync folders",
+                "webdavServers": "WebDAV Servers",
+                "webdavServersDesc": "Configure cloud server connections",
+                "syncStatus": "Sync Status",
+                "syncStatusDesc": "View sync progress and history",
+                "settings": "Settings",
+                "settingsDesc": "App configuration and preferences"
+            },
+            "systemStatus": {
+                "title": "System Status",
+                "activeSyncs": "Active Syncs",
+                "syncedFiles": "Synced Files",
+                "transferred": "Data Transferred"
+            },
+            "devTests": {
+                "title": "Developer Tests"
+            }
         }
     }
 }

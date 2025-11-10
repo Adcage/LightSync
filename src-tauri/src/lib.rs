@@ -8,6 +8,8 @@ mod config_watcher;
 mod constants;
 // 数据库操作模块
 mod database;
+// 系统信息模块
+mod system;
 
 // 公开导出错误类型，供其他模块使用
 pub use error::{Result, SyncError};
@@ -67,6 +69,9 @@ pub fn run() {
             // 配置文件监听命令
             config_watcher::start_config_watcher,
             config_watcher::stop_config_watcher,
+            // 系统信息命令
+            system::get_runtime_environment,
+            system::get_environment_mode,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
