@@ -3,6 +3,7 @@ import {getCurrentWindow} from "@tauri-apps/api/window";
 
 export const TitleBar = () => {
     const [isMaximized, setIsMaximized] = useState(false);
+    const [isDragging, setIsDragging] = useState(false);
     const appWindow = getCurrentWindow();
 
     useEffect(() => {
@@ -61,28 +62,48 @@ export const TitleBar = () => {
         }
     };
 
+    const handleMouseDown = (e: React.MouseEvent) => {
+        // 只在左键点击且不在按钮上时启用拖拽
+        if (e.button === 0 && (e.target as HTMLElement).closest('button') === null) {
+            setIsDragging(true);
+        }
+    };
+
+    const handleMouseUp = () => {
+        setIsDragging(false);
+    };
+
     return (
         <div
-            data-tauri-drag-region
-            className="flex items-center justify-between h-12 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 select-none shadow-sm"
+            className={`flex items-center justify-between h-12 bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-zinc-800 select-none shadow-sm ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+            }`}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
         >
-            {/* 左侧：应用图标和标题 */}
-            <div className="flex items-center gap-3 px-4" data-tauri-drag-region>
+            {/* 左侧：应用图标和标题 - 拖拽区域 */}
+            <div 
+                className="flex items-center gap-3 px-4 flex-1"
+                data-tauri-drag-region
+            >
                 <div
-                    className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-400 via-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                    className="w-6 h-6 rounded-lg bg-gradient-to-br from-cyan-400 via-blue-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md"
+                >
                     L
                 </div>
                 <span className="text-sm font-semibold text-gray-800 dark:text-gray-200 tracking-wide">
-          LightSync
-        </span>
+                    LightSync
+                </span>
             </div>
 
-            {/* 右侧：窗口控制按钮 */}
-            <div className="flex items-center h-full">
+            {/* 右侧：窗口控制按钮 - 非拖拽区域 */}
+            <div className="flex items-center h-full" data-tauri-drag-region="false">
                 <button
                     onClick={handleMinimize}
-                    className="h-full px-5 hover:bg-gray-100 dark:hover:bg-zinc-800 active:bg-gray-200 dark:active:bg-zinc-700 transition-all flex items-center justify-center group"
+                    className="h-full px-5 hover:bg-gray-100 dark:hover:bg-zinc-800 active:bg-gray-200 dark:active:bg-zinc-700 transition-all flex items-center justify-center group focus:outline-none"
                     aria-label="最小化"
+                    type="button"
                 >
                     <svg 
                         xmlns="http://www.w3.org/2000/svg"
@@ -102,8 +123,9 @@ export const TitleBar = () => {
 
                 <button
                     onClick={handleMaximize}
-                    className="h-full px-5 hover:bg-gray-100 dark:hover:bg-zinc-800 active:bg-gray-200 dark:active:bg-zinc-700 transition-all flex items-center justify-center group"
+                    className="h-full px-5 hover:bg-gray-100 dark:hover:bg-zinc-800 active:bg-gray-200 dark:active:bg-zinc-700 transition-all flex items-center justify-center group focus:outline-none"
                     aria-label={isMaximized ? "还原" : "最大化"}
+                    type="button"
                 >
                     {isMaximized ? (
                         <svg 
@@ -141,8 +163,9 @@ export const TitleBar = () => {
 
                 <button
                     onClick={handleClose}
-                    className="h-full px-5 hover:bg-red-600 active:bg-red-700 transition-all flex items-center justify-center group"
+                    className="h-full px-5 hover:bg-red-600 active:bg-red-700 transition-all flex items-center justify-center group focus:outline-none"
                     aria-label="关闭"
+                    type="button"
                 >
                     <svg 
                         xmlns="http://www.w3.org/2000/svg"

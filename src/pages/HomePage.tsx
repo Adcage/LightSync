@@ -6,6 +6,7 @@ import ConfigTest from '../components/ConfigTest';
 import DatabaseTest from '../components/DatabaseTest';
 import LanguageTest from '../components/LanguageTest';
 import { SystemInfo } from '../components/SystemInfo';
+import { DebugPanel } from '../components/DebugPanel';
 import {isDevelopmentMode} from "../utils/system.ts";
 
 const HomePage: React.FC = () => {
@@ -108,17 +109,21 @@ const HomePage: React.FC = () => {
 
       {/* 开发者测试区域 - 仅在开发环境显示 */}
       {isDev && (
-        <Card>
-          <CardHeader>
-            <h2 className="text-xl font-semibold">{t('home.devTests.title', '开发者测试')}</h2>
-          </CardHeader>
-          <CardBody className="space-y-6">
-            <LanguageTest />
-            <DatabaseTest />
-            <ConfigTest />
-            <SystemInfo />
-          </CardBody>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader>
+              <h2 className="text-xl font-semibold">{t('home.devTests.title', '开发者测试')}</h2>
+            </CardHeader>
+            <CardBody className="space-y-6">
+              <LanguageTest />
+              <DatabaseTest />
+              <ConfigTest />
+              <SystemInfo />
+            </CardBody>
+          </Card>
+          
+          <DebugPanel />
+        </div>
       )}
     </div>
   );

@@ -4,23 +4,57 @@ import { Button } from "@nextui-org/react";
 
 export const ThemeSwitch = () => {
   const [mounted, setMounted] = useState(false);
+  const [currentTheme, setCurrentTheme] = useState<string | undefined>(undefined);
   const { theme, setTheme } = useTheme();
 
   useEffect(() => {
-    setMounted(true);
+    // 确保在客户端渲染完成后再设置主题
+    const timer = setTimeout(() => {
+      setMounted(true);
+      setCurrentTheme(theme);
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
 
-  if (!mounted) return null;
+  useEffect(() => {
+    if (mounted) {
+      setCurrentTheme(theme);
+    }
+  }, [theme, mounted]);
+
+  const handleThemeToggle = () => {
+    if (currentTheme) {
+      const newTheme = currentTheme === "dark" ? "light" : "dark";
+      setTheme(newTheme);
+      setCurrentTheme(newTheme);
+    }
+  };
+
+  // 在服务端渲染或未挂载时显示占位符，避免布局偏移
+  if (!mounted || !currentTheme) {
+    return (
+      <Button
+        isIconOnly
+        variant="light"
+        aria-label="Toggle theme"
+        className="text-default-500 opacity-50"
+        disabled
+      >
+        <div className="w-6 h-6" />
+      </Button>
+    );
+  }
 
   return (
     <Button
       isIconOnly
       variant="light"
       aria-label="Toggle theme"
-      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="text-default-500"
+      onClick={handleThemeToggle}
+      className="text-default-500 hover:bg-default-100 active:bg-default-200 transition-colors"
     >
-      {theme === "dark" ? (
+      {currentTheme === "dark" ? (
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -32,7 +66,7 @@ export const ThemeSwitch = () => {
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
-            d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"
+            d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591-1.591m5.868 4.227-1.592 1.591M5.25 12H3m4.227-4.773 1.591-1.591m-1.591 5.868-1.591 1.592M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591-1.591m5.868 4.227-1.592 1.591M5.25 12H3m4.227-4.773 1.591-1.591m-1.591 5.868-1.591 1.592"
           />
         </svg>
       ) : (

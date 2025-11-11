@@ -12,19 +12,30 @@
   "app": {
     "windows": [
       {
-        "title": "lightsync",
+        "title": "LightSync",
+        "label": "main",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
         "minHeight": 600,
         "decorations": false,
         "transparent": false,
-        "resizable": true
+        "resizable": true,
+        "minimizable": true,
+        "maximizable": true,
+        "closable": true,
+        "center": true,
+        "fullscreen": false,
+        "hiddenTitle": false,
+        "titleBarStyle": "Overlay",
+        "skipTaskbar": false,
+        "theme": "Light"
       }
     ],
     "security": {
       "csp": null
-    }
+    },
+    "macOSPrivateApi": true
   },
   "bundle": {
     "active": true,
@@ -35,6 +46,15 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null,
+      "hardenedRuntime": true,
+      "minimumSystemVersion": "10.15"
+    }
   }
 }

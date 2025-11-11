@@ -7,9 +7,47 @@
 }
 
 /* 按钮不应该是拖拽区域 */
-[data-tauri-drag-region] button {
+[data-tauri-drag-region="false"] {
   -webkit-app-region: no-drag;
   app-region: no-drag;
+}
+
+/* macOS 特定样式优化 */
+@media (platform: darwin) {
+  /* macOS 上的标题栏按钮样式 */
+  .titlebar-button {
+    width: 46px;
+    height: 100%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+  }
+  
+  /* macOS 上的关闭按钮样式 */
+  .titlebar-close-button:hover {
+    background-color: #ff5f57;
+    color: white;
+  }
+  
+  .titlebar-close-button:active {
+    background-color: #e0433e;
+  }
+  
+  /* macOS 上的最小化和最大化按钮 */
+  .titlebar-min-button:hover,
+  .titlebar-max-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+  }
+  
+  /* 深色模式下的悬停效果 */
+  .dark .titlebar-min-button:hover,
+  .dark .titlebar-max-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
 }
 
 /* Windows 特定样式优化 */
@@ -17,20 +55,61 @@
   .titlebar-button {
     width: 46px;
   }
+  
+  .titlebar-close-button:hover {
+    background-color: #e81123;
+    color: white;
+  }
+  
+  .titlebar-close-button:active {
+    background-color: #c50f1f;
+  }
 }
 
-/* 平滑过渡效果 */
+/* Linux 特定样式优化 */
+@media (platform: linux) {
+  .titlebar-button {
+    width: 46px;
+  }
+}
+
+/* 通用平滑过渡效果 */
 .titlebar-button {
   transition: background-color 0.2s ease, color 0.2s ease;
+  cursor: pointer;
+  outline: none;
 }
 
-/* 关闭按钮悬停效果 */
-.titlebar-close-button:hover {
-  background-color: #e81123;
-  color: white;
+/* 防止文本选择 */
+.titlebar-container {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.titlebar-close-button:active {
-  background-color: #c50f1f;
+/* 拖拽时的光标样式 */
+.cursor-grab {
+  cursor: -webkit-grab;
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
+}
+
+/* 确保按钮在拖拽时不会触发点击事件 */
+.titlebar-button {
+  pointer-events: auto;
+}
+
+/* 防止按钮区域的双击行为 */
+.titlebar-button {
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
 }
 

@@ -10,7 +10,12 @@ export const EnvironmentBadge: React.FC = () => {
   const { isDev, loading } = useEnvironment();
 
   if (loading) {
-    return <Chip variant="flat" isLoading>加载中...</Chip>;
+    return (
+      <div className="flex items-center gap-2">
+        <div className="w-2 h-2 bg-default-300 rounded-full animate-pulse" />
+        <span className="text-sm text-default-500">加载中...</span>
+      </div>
+    );
   }
 
   return (
