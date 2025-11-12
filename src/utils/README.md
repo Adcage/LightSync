@@ -13,27 +13,27 @@
 ### 1. 基础函数
 
 ```typescript
-import { 
-  getRuntimeEnvironment, 
-  getEnvironmentMode, 
-  isDevelopmentMode, 
-  isProductionMode 
-} from '../utils/system';
+import {
+  getRuntimeEnvironment,
+  getEnvironmentMode,
+  isDevelopmentMode,
+  isProductionMode,
+} from '../utils/system'
 
 // 获取完整的运行环境信息
-const envInfo = await getRuntimeEnvironment();
+const envInfo = await getRuntimeEnvironment()
 // 示例输出: "OS: windows, Arch: x86_64, App: 0.1.0"
 
 // 获取环境模式
-const mode = await getEnvironmentMode();
+const mode = await getEnvironmentMode()
 // 输出: "development" 或 "production"
 
 // 检查是否为开发环境
-const isDev = await isDevelopmentMode();
+const isDev = await isDevelopmentMode()
 // 输出: true 或 false
 
 // 检查是否为生产环境
-const isProd = await isProductionMode();
+const isProd = await isProductionMode()
 // 输出: true 或 false
 ```
 
@@ -85,7 +85,7 @@ pub fn get_environment_mode() -> crate::Result<String> {
     } else {
         "production".to_string()
     };
-    
+
     Ok(mode)
 }
 ```

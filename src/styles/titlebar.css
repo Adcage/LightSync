@@ -7,7 +7,7 @@
 }
 
 /* 按钮不应该是拖拽区域 */
-[data-tauri-drag-region="false"] {
+[data-tauri-drag-region='false'] {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
@@ -26,23 +26,23 @@
     -webkit-app-region: no-drag;
     app-region: no-drag;
   }
-  
+
   /* macOS 上的关闭按钮样式 */
   .titlebar-close-button:hover {
     background-color: #ff5f57;
     color: white;
   }
-  
+
   .titlebar-close-button:active {
     background-color: #e0433e;
   }
-  
+
   /* macOS 上的最小化和最大化按钮 */
   .titlebar-min-button:hover,
   .titlebar-max-button:hover {
     background-color: rgba(0, 0, 0, 0.1);
   }
-  
+
   /* 深色模式下的悬停效果 */
   .dark .titlebar-min-button:hover,
   .dark .titlebar-max-button:hover {
@@ -55,12 +55,12 @@
   .titlebar-button {
     width: 46px;
   }
-  
+
   .titlebar-close-button:hover {
     background-color: #e81123;
     color: white;
   }
-  
+
   .titlebar-close-button:active {
     background-color: #c50f1f;
   }
@@ -75,7 +75,9 @@
 
 /* 通用平滑过渡效果 */
 .titlebar-button {
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
   cursor: pointer;
   outline: none;
 }
@@ -112,4 +114,3 @@
   -o-user-drag: none;
   user-drag: none;
 }
-

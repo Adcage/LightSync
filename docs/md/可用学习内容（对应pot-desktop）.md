@@ -32,8 +32,8 @@
 
 ### 1.1 核心技术栈对比
 
-| 技术栈分类     | pot-desktop              | 适用于 LightSync |
-| -------------- | ------------------------ | ---------------- |
+| 技术栈分类     | pot-desktop              | 适用于 LightSync  |
+| -------------- | ------------------------ | ----------------- |
 | **前端框架**   | React 18.3.1             | ✅ 推荐使用       |
 | **UI 组件库**  | NextUI 2.x + TailwindCSS | ✅ 现代化 UI 方案 |
 | **状态管理**   | Jotai (原子化状态)       | ✅ 轻量级状态管理 |
@@ -43,6 +43,7 @@
 | **构建工具**   | Vite 5                   | ✅ 快速开发       |
 
 **学习要点文件位置：**
+
 - 前端配置：`package.json` (14-46行)
 - 后端配置：`src-tauri/Cargo.toml` (15-42行)
 - 构建配置：`vite.config.js`
@@ -75,10 +76,12 @@ src-tauri/src/
    - 便于维护和测试
 
 2. **全局状态管理**
+
    ```rust
    // src-tauri/src/main.rs (38-39行)
    pub static APP: OnceCell<tauri::AppHandle> = OnceCell::new();
    ```
+
    - 使用 `OnceCell` 实现全局单例
    - 避免重复初始化，线程安全
 
@@ -87,6 +90,7 @@ src-tauri/src/
    // src-tauri/src/main.rs (42行)
    pub struct StringWrapper(pub Mutex<String>);
    ```
+
    - 使用 `Mutex` 保证线程安全
    - 适用于跨窗口数据共享
 
@@ -128,6 +132,7 @@ pub fn init_config(app: &mut tauri::App) {
 ```
 
 **值得学习的设计：**
+
 1. ✅ 使用操作系统标准配置目录
 2. ✅ 自动创建配置文件
 3. ✅ 错误处理友好，不会因配置问题崩溃
@@ -141,49 +146,49 @@ pub fn init_config(app: &mut tauri::App) {
 
 ```javascript
 export const useConfig = (key, defaultValue, options = {}) => {
-    const [property, setPropertyState, getProperty] = useGetState(null);
-    const { sync = true } = options;
+  const [property, setPropertyState, getProperty] = useGetState(null)
+  const { sync = true } = options
 
-    // 同步到Store (State -> Store)
-    const syncToStore = useCallback(
-        debounce((v) => {
-            store.set(key, v);
-            store.save();
-            let eventKey = key.replaceAll('.', '_').replaceAll('@', ':');
-            emit(`${eventKey}_changed`, v);
-        }),
-        []
-    );
+  // 同步到Store (State -> Store)
+  const syncToStore = useCallback(
+    debounce(v => {
+      store.set(key, v)
+      store.save()
+      let eventKey = key.replaceAll('.', '_').replaceAll('@', ':')
+      emit(`${eventKey}_changed`, v)
+    }),
+    []
+  )
 
-    // 同步到State (Store -> State)
-    const syncToState = useCallback((v) => {
-        if (v !== null) {
-            setPropertyState(v);
+  // 同步到State (Store -> State)
+  const syncToState = useCallback(v => {
+    if (v !== null) {
+      setPropertyState(v)
+    } else {
+      store.get(key).then(v => {
+        if (v === null) {
+          setPropertyState(defaultValue)
+          store.set(key, defaultValue)
+          store.save()
         } else {
-            store.get(key).then((v) => {
-                if (v === null) {
-                    setPropertyState(defaultValue);
-                    store.set(key, defaultValue);
-                    store.save();
-                } else {
-                    setPropertyState(v);
-                }
-            });
+          setPropertyState(v)
         }
-    }, []);
+      })
+    }
+  }, [])
 
-    return [property, setProperty, getProperty];
-};
+  return [property, setProperty, getProperty]
+}
 ```
 
 **学习要点：**
 
-| 特性           | 说明                   | 代码位置                         |
-| -------------- | ---------------------- | -------------------------------- |
+| 特性           | 说明                    | 代码位置                         |
+| -------------- | ----------------------- | -------------------------------- |
 | **双向同步**   | State ↔ Store 自动同步 | `useConfig.jsx` (12-20, 23-37行) |
-| **事件驱动**   | 配置变更时发送事件通知 | `useConfig.jsx` (17行)           |
-| **防抖优化**   | 避免频繁写入磁盘       | `useConfig.jsx` (13行)           |
-| **默认值处理** | 自动设置和保存默认值   | `useConfig.jsx` (28-33行)        |
+| **事件驱动**   | 配置变更时发送事件通知  | `useConfig.jsx` (17行)           |
+| **防抖优化**   | 避免频繁写入磁盘        | `useConfig.jsx` (13行)           |
+| **默认值处理** | 自动设置和保存默认值    | `useConfig.jsx` (28-33行)        |
 
 ### 2.3 配置文件监听
 
@@ -193,17 +198,18 @@ export const useConfig = (key, defaultValue, options = {}) => {
 
 ```javascript
 export async function initStore() {
-    const appConfigDirPath = await appConfigDir();
-    const appConfigPath = await join(appConfigDirPath, 'config.json');
-    store = new Store(appConfigPath);
-    const _ = await watch(appConfigPath, async () => {
-        await store.load();
-        await invoke('reload_store');
-    });
+  const appConfigDirPath = await appConfigDir()
+  const appConfigPath = await join(appConfigDirPath, 'config.json')
+  store = new Store(appConfigPath)
+  const _ = await watch(appConfigPath, async () => {
+    await store.load()
+    await invoke('reload_store')
+  })
 }
 ```
 
 **适用于 LightSync 的场景：**
+
 - ✅ 监听同步配置变更
 - ✅ WebDAV 服务器配置更新
 - ✅ 多窗口配置同步
@@ -259,6 +265,7 @@ impl serde::Serialize for Error {
 | **透明错误**     | `#[error(transparent)]` 保留原始错误信息 | 调试和日志记录            |
 
 **对 LightSync 的启示：**
+
 ```rust
 // 建议的 LightSync 错误类型
 #[derive(Debug, thiserror::Error)]
@@ -288,35 +295,32 @@ pub enum SyncError {
 
 ```json
 {
-    "allowlist": {
-        "all": false,  // ⚠️ 关键：默认拒绝所有权限
-        "shell": {
-            "all": true,
-            "open": ".*"  // 允许打开外部链接
-        },
-        "fs": {
-            "all": true,
-            "scope": [
-                "$APPCONFIG/**",  // 仅限应用配置目录
-                "$APPCACHE/**"    // 仅限应用缓存目录
-            ]
-        },
-        "http": {
-            "all": true,
-            "request": true,
-            "scope": [
-                "http://**",
-                "https://**"
-            ]
-        }
+  "allowlist": {
+    "all": false, // ⚠️ 关键：默认拒绝所有权限
+    "shell": {
+      "all": true,
+      "open": ".*" // 允许打开外部链接
+    },
+    "fs": {
+      "all": true,
+      "scope": [
+        "$APPCONFIG/**", // 仅限应用配置目录
+        "$APPCACHE/**" // 仅限应用缓存目录
+      ]
+    },
+    "http": {
+      "all": true,
+      "request": true,
+      "scope": ["http://**", "https://**"]
     }
+  }
 }
 ```
 
 **安全配置对比表：**
 
-| 权限类型     | pot-desktop 配置                | LightSync 建议              | 理由             |
-| ------------ | ------------------------------- | --------------------------- | ---------------- |
+| 权限类型     | pot-desktop 配置                | LightSync 建议               | 理由             |
+| ------------ | ------------------------------- | ---------------------------- | ---------------- |
 | **文件系统** | `$APPCONFIG/**`, `$APPCACHE/**` | ✅ 同样策略 + 同步目录白名单 | 防止访问敏感文件 |
 | **网络请求** | `http://**`, `https://**`       | ✅ 限制为 WebDAV 服务器域名  | 减少攻击面       |
 | **Shell**    | `open: ".*"`                    | ⚠️ 限制为必要的命令          | 防止命令注入     |
@@ -330,19 +334,20 @@ pub enum SyncError {
 
 ```json
 {
-    "security": {
-        "csp": "default-src * data: ; img-src * 'self' asset: https: data: ; style-src * 'unsafe-inline'; worker-src 'self' blob: ; script-src * 'unsafe-eval';",
-        "devCsp": "default-src * data: ; img-src * 'self' asset: https: data: ; style-src * 'unsafe-inline'; worker-src 'self' blob: ; script-src * 'unsafe-eval';"
-    }
+  "security": {
+    "csp": "default-src * data: ; img-src * 'self' asset: https: data: ; style-src * 'unsafe-inline'; worker-src 'self' blob: ; script-src * 'unsafe-eval';",
+    "devCsp": "default-src * data: ; img-src * 'self' asset: https: data: ; style-src * 'unsafe-inline'; worker-src 'self' blob: ; script-src * 'unsafe-eval';"
+  }
 }
 ```
 
 **对 LightSync 的建议：**
+
 ```json
 {
-    "security": {
-        "csp": "default-src 'self'; connect-src 'self' https://your-webdav-server.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'"
-    }
+  "security": {
+    "csp": "default-src 'self'; connect-src 'self' https://your-webdav-server.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'"
+  }
 }
 ```
 
@@ -370,12 +375,12 @@ pub fn get_password(service: &str, username: &str) -> Result<String> {
 
 **安全最佳实践表：**
 
-| 安全措施         | pot-desktop        | LightSync 建议              | 优先级 |
-| ---------------- | ------------------ | --------------------------- | ------ |
-| **密码加密存储** | ❌ 未使用系统密钥链 | ✅ 使用 `keyring` crate      | 🔴 P0   |
-| **HTTPS 验证**   | ✅ 使用 reqwest     | ✅ 保持                      | 🔴 P0   |
-| **配置文件权限** | ⚠️ 未明确设置       | ✅ 设置为 600 (仅用户可读写) | 🟡 P1   |
-| **日志脱敏**     | ⚠️ 可能泄露敏感信息 | ✅ 移除密码、URL 等敏感数据  | 🟡 P1   |
+| 安全措施         | pot-desktop         | LightSync 建议               | 优先级 |
+| ---------------- | ------------------- | ---------------------------- | ------ |
+| **密码加密存储** | ❌ 未使用系统密钥链 | ✅ 使用 `keyring` crate      | 🔴 P0  |
+| **HTTPS 验证**   | ✅ 使用 reqwest     | ✅ 保持                      | 🔴 P0  |
+| **配置文件权限** | ⚠️ 未明确设置       | ✅ 设置为 600 (仅用户可读写) | 🟡 P1  |
+| **日志脱敏**     | ⚠️ 可能泄露敏感信息 | ✅ 移除密码、URL 等敏感数据  | 🟡 P1  |
 
 ---
 
@@ -451,6 +456,7 @@ pub fn start_clipboard_monitor(app_handle: tauri::AppHandle) {
 ```
 
 **学习要点：**
+
 1. ✅ 使用 `pre_text` 避免重复处理相同内容
 2. ✅ 条件退出循环，避免资源泄漏
 3. ✅ `try_lock` 避免死锁
@@ -521,8 +527,8 @@ fn get_current_monitor(x: i32, y: i32) -> Monitor {
 
 **值得学习的多显示器处理：**
 
-| 功能                   | 实现方法                   | 代码位置                | LightSync 应用               |
-| ---------------------- | -------------------------- | ----------------------- | ---------------------------- |
+| 功能                   | 实现方法                   | 代码位置                | LightSync 应用                |
+| ---------------------- | -------------------------- | ----------------------- | ----------------------------- |
 | **检测鼠标所在显示器** | 遍历所有显示器，比较坐标   | `window.rs` (43-54行)   | ✅ 同步状态窗口显示在当前屏幕 |
 | **DPI 缩放支持**       | `monitor.scale_factor()`   | `window.rs` (157行)     | ✅ 高 DPI 屏幕适配            |
 | **边界检测**           | 防止窗口超出屏幕           | `window.rs` (181-196行) | ✅ 防止窗口不可见             |
@@ -570,7 +576,7 @@ fn build_window(label: &str, title: &str) -> (Window, bool) {
             // ✅ macOS/Windows 添加阴影效果
             #[cfg(not(target_os = "linux"))]
             set_shadow(&window, true).unwrap_or_default();
-            
+
             (window, false)
         }
     }
@@ -579,12 +585,12 @@ fn build_window(label: &str, title: &str) -> (Window, bool) {
 
 **窗口管理最佳实践：**
 
-| 实践           | 说明                      | 代码位置                | 学习价值 |
-| -------------- | ------------------------- | ----------------------- | -------- |
-| **窗口复用**   | 避免重复创建，提升性能    | `window.rs` (76-79行)   | ⭐⭐⭐⭐⭐    |
-| **平台差异化** | macOS 使用 Overlay 标题栏 | `window.rs` (94-103行)  | ⭐⭐⭐⭐⭐    |
-| **延迟显示**   | `visible(false)` 避免闪烁 | `window.rs` (92行)      | ⭐⭐⭐⭐     |
-| **阴影效果**   | 提升视觉体验              | `window.rs` (107-108行) | ⭐⭐⭐      |
+| 实践           | 说明                      | 代码位置                | 学习价值   |
+| -------------- | ------------------------- | ----------------------- | ---------- |
+| **窗口复用**   | 避免重复创建，提升性能    | `window.rs` (76-79行)   | ⭐⭐⭐⭐⭐ |
+| **平台差异化** | macOS 使用 Overlay 标题栏 | `window.rs` (94-103行)  | ⭐⭐⭐⭐⭐ |
+| **延迟显示**   | `visible(false)` 避免闪烁 | `window.rs` (92行)      | ⭐⭐⭐⭐   |
+| **阴影效果**   | 提升视觉体验              | `window.rs` (107-108行) | ⭐⭐⭐     |
 
 ### 6.3 窗口位置计算
 
@@ -602,16 +608,16 @@ fn translate_window() -> Window {
             Position { x: 0, y: 0 }
         }
     };
-    
+
     let monitor = window.current_monitor().unwrap().unwrap();
     let dpi = monitor.scale_factor();
-    
+
     // DPI 缩放计算
     window.set_size(tauri::PhysicalSize::new(
         (width as f64) * dpi,
         (height as f64) * dpi,
     )).unwrap();
-    
+
     // 边界检测：防止窗口超出右边界
     if mouse_position.x as f64 + width as f64 * dpi
         > monitor_position_x + monitor_size_width
@@ -621,7 +627,7 @@ fn translate_window() -> Window {
             mouse_position.x = monitor_position_x as i32;
         }
     }
-    
+
     // 边界检测：防止窗口超出底部
     if mouse_position.y as f64 + height as f64 * dpi
         > monitor_position_y + monitor_size_height
@@ -631,17 +637,18 @@ fn translate_window() -> Window {
             mouse_position.y = monitor_position_y as i32;
         }
     }
-    
+
     window.set_position(tauri::PhysicalPosition::new(
         mouse_position.x,
         mouse_position.y,
     )).unwrap();
-    
+
     window
 }
 ```
 
 **LightSync 同步窗口定位建议：**
+
 ```rust
 // 建议：显示同步进度窗口在屏幕中央
 pub fn show_sync_progress_window() {
@@ -669,7 +676,7 @@ pub fn show_sync_progress_window() {
 #[tauri::command]
 pub fn update_tray(app_handle: tauri::AppHandle, mut language: String, mut copy_mode: String) {
     let tray_handle = app_handle.tray_handle();
-    
+
     // 根据语言设置托盘菜单
     tray_handle.set_menu(match language.as_str() {
         "en" => tray_menu_en(),
@@ -679,11 +686,11 @@ pub fn update_tray(app_handle: tauri::AppHandle, mut language: String, mut copy_
         // ... 更多语言
         _ => tray_menu_en(),
     }).unwrap();
-    
+
     // 设置托盘提示
     #[cfg(not(target_os = "linux"))]
     tray_handle.set_tooltip(&format!("pot {}", app_handle.package_info().version)).unwrap();
-    
+
     // 更新菜单项选中状态
     tray_handle.get_item("clipboard_monitor")
         .set_selected(enable_clipboard_monitor)
@@ -693,8 +700,8 @@ pub fn update_tray(app_handle: tauri::AppHandle, mut language: String, mut copy_
 
 **托盘菜单设计模式：**
 
-| 菜单项       | pot-desktop                     | LightSync 建议          | 说明     |
-| ------------ | ------------------------------- | ----------------------- | -------- |
+| 菜单项       | pot-desktop                     | LightSync 建议           | 说明     |
+| ------------ | ------------------------------- | ------------------------ | -------- |
 | **快速操作** | 输入翻译、OCR 识别              | ✅ 立即同步、暂停同步    | 高频操作 |
 | **功能开关** | 剪贴板监控 (checkable)          | ✅ 自动同步 (checkable)  | 状态切换 |
 | **子菜单**   | 自动复制（单选）                | ✅ 同步模式（双向/单向） | 分组选项 |
@@ -710,7 +717,7 @@ pub fn tray_event_handler<'a>(app: &'a AppHandle, event: SystemTrayEvent) {
     match event {
         #[cfg(target_os = "windows")]
         SystemTrayEvent::LeftClick { .. } => on_tray_click(),  // Windows 左键点击
-        
+
         SystemTrayEvent::MenuItemClick { id, .. } => match id.as_str() {
             "input_translate" => on_input_translate_click(),
             "clipboard_monitor" => on_clipboard_monitor_click(app),
@@ -724,6 +731,7 @@ pub fn tray_event_handler<'a>(app: &'a AppHandle, event: SystemTrayEvent) {
 ```
 
 **平台差异化处理：**
+
 - Windows: 左键点击托盘图标执行默认操作
 - macOS/Linux: 仅右键菜单
 
@@ -790,14 +798,15 @@ pub fn register_shortcut(shortcut: &str) -> Result<(), String> {
 
 **快捷键设计要点：**
 
-| 特性         | 实现方式                 | 代码位置              | 学习价值 |
-| ------------ | ------------------------ | --------------------- | -------- |
-| **动态注册** | 从配置读取快捷键         | `hotkey.rs` (11-16行) | ⭐⭐⭐⭐⭐    |
-| **错误处理** | 注册失败不崩溃           | `hotkey.rs` (26-35行) | ⭐⭐⭐⭐     |
-| **批量注册** | "all" 模式注册所有快捷键 | `hotkey.rs` (57-66行) | ⭐⭐⭐⭐     |
-| **前端注册** | 允许前端动态修改快捷键   | `hotkey.rs` (74-98行) | ⭐⭐⭐⭐⭐    |
+| 特性         | 实现方式                 | 代码位置              | 学习价值   |
+| ------------ | ------------------------ | --------------------- | ---------- |
+| **动态注册** | 从配置读取快捷键         | `hotkey.rs` (11-16行) | ⭐⭐⭐⭐⭐ |
+| **错误处理** | 注册失败不崩溃           | `hotkey.rs` (26-35行) | ⭐⭐⭐⭐   |
+| **批量注册** | "all" 模式注册所有快捷键 | `hotkey.rs` (57-66行) | ⭐⭐⭐⭐   |
+| **前端注册** | 允许前端动态修改快捷键   | `hotkey.rs` (74-98行) | ⭐⭐⭐⭐⭐ |
 
 **LightSync 快捷键建议：**
+
 ```rust
 pub fn register_sync_shortcuts() -> Result<(), String> {
     let app_handle = APP.get().unwrap();
@@ -822,12 +831,14 @@ pub fn register_sync_shortcuts() -> Result<(), String> {
 ```
 
 **配置文件：**
+
 ```toml
 # Cargo.toml
 tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspace", branch = "v1" }
 ```
 
 **平台支持：**
+
 - ✅ Windows: 注册表启动项
 - ✅ macOS: LaunchAgent
 - ✅ Linux: .desktop 文件
@@ -850,6 +861,7 @@ tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspac
 ```
 
 **学习要点：**
+
 1. ✅ 检测已运行实例
 2. ✅ 友好提示用户
 3. ✅ 传递启动参数到已运行实例（可选）
@@ -866,25 +878,25 @@ tauri-plugin-autostart = { git = "https://github.com/tauri-apps/plugins-workspac
 
 ```javascript
 i18n.use(initReactI18next).init({
-    fallbackLng: {
-        zh_tw: ['zh_cn'],
-        zh_cn: ['zh_tw'],
-        pt_pt: ['pt_br'],
-        pt_br: ['pt_pt'],
-        default: ['en'],
-    },
-    debug: false,
-    interpolation: {
-        escapeValue: false,  // React 已经防止 XSS
-    },
-    resources: {
-        en: en_US,
-        zh_cn: zh_CN,
-        zh_tw: zh_TW,
-        ja: ja_JP,
-        // ... 20+ 种语言
-    },
-});
+  fallbackLng: {
+    zh_tw: ['zh_cn'],
+    zh_cn: ['zh_tw'],
+    pt_pt: ['pt_br'],
+    pt_br: ['pt_pt'],
+    default: ['en'],
+  },
+  debug: false,
+  interpolation: {
+    escapeValue: false, // React 已经防止 XSS
+  },
+  resources: {
+    en: en_US,
+    zh_cn: zh_CN,
+    zh_tw: zh_TW,
+    ja: ja_JP,
+    // ... 20+ 种语言
+  },
+})
 ```
 
 **国际化最佳实践：**
@@ -900,11 +912,11 @@ i18n.use(initReactI18next).init({
 
 ```javascript
 // src/window/Config/index.jsx (65行)
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from 'react-i18next'
 
 function ConfigPage() {
-    const { t } = useTranslation();
-    return <h2>{t(`config.${location.pathname.slice(1)}.title`)}</h2>;
+  const { t } = useTranslation()
+  return <h2>{t(`config.${location.pathname.slice(1)}.title`)}</h2>
 }
 ```
 
@@ -1004,14 +1016,15 @@ pub fn init_lang_detect() {
 
 **学习要点表格：**
 
-| 特性           | 实现方式       | 代码位置                   | LightSync 应用    |
-| -------------- | -------------- | -------------------------- | ----------------- |
-| **本地识别**   | lingua crate   | `lang_detect.rs` (4-28行)  | ❌ 不需要语言检测  |
+| 特性           | 实现方式       | 代码位置                   | LightSync 应用        |
+| -------------- | -------------- | -------------------------- | --------------------- |
+| **本地识别**   | lingua crate   | `lang_detect.rs` (4-28行)  | ❌ 不需要语言检测     |
 | **延迟初始化** | 启动时预热     | `lang_detect.rs` (1-30行)  | ⭐⭐⭐⭐ 减少启动时间 |
-| **枚举映射**   | match 语句转换 | `lang_detect.rs` (59-83行) | ⭐⭐⭐ 类型安全      |
-| **默认值处理** | Option 处理    | `lang_detect.rs` (84行)    | ⭐⭐⭐⭐⭐ 防止崩溃    |
+| **枚举映射**   | match 语句转换 | `lang_detect.rs` (59-83行) | ⭐⭐⭐ 类型安全       |
+| **默认值处理** | Option 处理    | `lang_detect.rs` (84行)    | ⭐⭐⭐⭐⭐ 防止崩溃   |
 
 **对 LightSync 的启示：**
+
 - ✅ 重型初始化在启动时异步预热
 - ✅ 使用 `OnceCell` 实现单例模式
 - ✅ 提供合理的默认值避免错误
@@ -1026,8 +1039,8 @@ pub fn init_lang_detect() {
 
 文件：`package.json` (24行)
 
-| 特性         | Jotai | Redux  | Zustand | 适用性            |
-| ------------ | ----- | ------ | ------- | ----------------- |
+| 特性         | Jotai | Redux  | Zustand | 适用性             |
+| ------------ | ----- | ------ | ------- | ------------------ |
 | **包体积**   | 3KB   | 8KB    | 3KB     | ✅ 轻量级          |
 | **学习成本** | 低    | 高     | 中      | ✅ 快速上手        |
 | **类型安全** | 完美  | 需配置 | 很好    | ✅ TypeScript 友好 |
@@ -1042,64 +1055,58 @@ pub fn init_lang_detect() {
 
 ```javascript
 // atoms/syncState.js (LightSync 建议)
-import { atom } from 'jotai';
+import { atom } from 'jotai'
 
 // 同步状态 atom
-export const isSyncingAtom = atom(false);
-export const syncProgressAtom = atom(0);
-export const lastSyncTimeAtom = atom(null);
-export const syncErrorAtom = atom(null);
+export const isSyncingAtom = atom(false)
+export const syncProgressAtom = atom(0)
+export const lastSyncTimeAtom = atom(null)
+export const syncErrorAtom = atom(null)
 
 // 计算 atom (衍生状态)
-export const syncStatusTextAtom = atom((get) => {
-    const isSyncing = get(isSyncingAtom);
-    const progress = get(syncProgressAtom);
-    if (isSyncing) {
-        return `Syncing... ${progress}%`;
-    }
-    const lastSync = get(lastSyncTimeAtom);
-    return lastSync ? `Last sync: ${lastSync}` : 'Not synced yet';
-});
+export const syncStatusTextAtom = atom(get => {
+  const isSyncing = get(isSyncingAtom)
+  const progress = get(syncProgressAtom)
+  if (isSyncing) {
+    return `Syncing... ${progress}%`
+  }
+  const lastSync = get(lastSyncTimeAtom)
+  return lastSync ? `Last sync: ${lastSync}` : 'Not synced yet'
+})
 
 // 异步 atom (副作用)
-export const triggerSyncAtom = atom(
-    null,
-    async (get, set, folderId) => {
-        set(isSyncingAtom, true);
-        set(syncErrorAtom, null);
-        try {
-            await invoke('sync_folder', { folderId });
-            set(lastSyncTimeAtom, new Date());
-        } catch (error) {
-            set(syncErrorAtom, error.message);
-        } finally {
-            set(isSyncingAtom, false);
-        }
-    }
-);
+export const triggerSyncAtom = atom(null, async (get, set, folderId) => {
+  set(isSyncingAtom, true)
+  set(syncErrorAtom, null)
+  try {
+    await invoke('sync_folder', { folderId })
+    set(lastSyncTimeAtom, new Date())
+  } catch (error) {
+    set(syncErrorAtom, error.message)
+  } finally {
+    set(isSyncingAtom, false)
+  }
+})
 ```
 
 **使用示例：**
 
 ```javascript
-import { useAtom, useAtomValue } from 'jotai';
-import { isSyncingAtom, syncStatusTextAtom, triggerSyncAtom } from './atoms/syncState';
+import { useAtom, useAtomValue } from 'jotai'
+import { isSyncingAtom, syncStatusTextAtom, triggerSyncAtom } from './atoms/syncState'
 
 function SyncButton({ folderId }) {
-    const [isSyncing, setIsSyncing] = useAtom(isSyncingAtom);
-    const statusText = useAtomValue(syncStatusTextAtom);
-    const [, triggerSync] = useAtom(triggerSyncAtom);
+  const [isSyncing, setIsSyncing] = useAtom(isSyncingAtom)
+  const statusText = useAtomValue(syncStatusTextAtom)
+  const [, triggerSync] = useAtom(triggerSyncAtom)
 
-    return (
-        <div>
-            <button 
-                onClick={() => triggerSync(folderId)}
-                disabled={isSyncing}
-            >
-                {statusText}
-            </button>
-        </div>
-    );
+  return (
+    <div>
+      <button onClick={() => triggerSync(folderId)} disabled={isSyncing}>
+        {statusText}
+      </button>
+    </div>
+  )
 }
 ```
 
@@ -1110,23 +1117,23 @@ function SyncButton({ folderId }) {
 文件：`src/utils/store.js`
 
 ```javascript
-import { Store } from 'tauri-plugin-store-api';
-import { appConfigDir, join } from '@tauri-apps/api/path';
-import { watch } from 'tauri-plugin-fs-watch-api';
-import { invoke } from '@tauri-apps/api';
+import { Store } from 'tauri-plugin-store-api'
+import { appConfigDir, join } from '@tauri-apps/api/path'
+import { watch } from 'tauri-plugin-fs-watch-api'
+import { invoke } from '@tauri-apps/api'
 
-export let store = new Store();
+export let store = new Store()
 
 export async function initStore() {
-    const appConfigDirPath = await appConfigDir();
-    const appConfigPath = await join(appConfigDirPath, 'config.json');
-    store = new Store(appConfigPath);
-    
-    // ✅ 监听配置文件变化，实时同步
-    const _ = await watch(appConfigPath, async () => {
-        await store.load();
-        await invoke('reload_store'); // 通知 Rust 端重新加载
-    });
+  const appConfigDirPath = await appConfigDir()
+  const appConfigPath = await join(appConfigDirPath, 'config.json')
+  store = new Store(appConfigPath)
+
+  // ✅ 监听配置文件变化，实时同步
+  const _ = await watch(appConfigPath, async () => {
+    await store.load()
+    await invoke('reload_store') // 通知 Rust 端重新加载
+  })
 }
 ```
 
@@ -1143,29 +1150,29 @@ export async function initStore() {
 ```javascript
 // utils/syncConfig.js (建议实现)
 export class SyncConfigManager {
-    constructor() {
-        this.listeners = new Map();
-    }
+  constructor() {
+    this.listeners = new Map()
+  }
 
-    // 监听特定配置键变化
-    async watch(key, callback) {
-        if (!this.listeners.has(key)) {
-            this.listeners.set(key, []);
-        }
-        this.listeners.get(key).push(callback);
-        
-        // 设置文件监听器
-        await listen(`config_${key}_changed`, (event) => {
-            this.listeners.get(key).forEach(cb => cb(event.payload));
-        });
+  // 监听特定配置键变化
+  async watch(key, callback) {
+    if (!this.listeners.has(key)) {
+      this.listeners.set(key, [])
     }
+    this.listeners.get(key).push(callback)
 
-    // 更新配置并通知
-    async set(key, value) {
-        await store.set(key, value);
-        await store.save();
-        await emit(`config_${key}_changed`, value);
-    }
+    // 设置文件监听器
+    await listen(`config_${key}_changed`, event => {
+      this.listeners.get(key).forEach(cb => cb(event.payload))
+    })
+  }
+
+  // 更新配置并通知
+  async set(key, value) {
+    await store.set(key, value)
+    await store.save()
+    await emit(`config_${key}_changed`, value)
+  }
 }
 ```
 
@@ -1232,55 +1239,53 @@ export class SyncConfigManager {
 
 ```jsx
 export default function Config() {
-    const [transparent] = useConfig('transparent', true);
-    const location = useLocation();
+  const [transparent] = useConfig('transparent', true)
+  const location = useLocation()
 
-    return (
-        <>
-            {/* 侧边栏 */}
-            <Card
-                shadow='none'
-                className={`${
-                    transparent ? 'bg-background/90' : 'bg-content1'
-                } float-left w-[230px] h-screen rounded-none ${
-                    osType === 'Linux' && 'rounded-l-[10px] border-1'
-                } border-r-1 border-default-100 select-none cursor-default`}
-            >
-                {/* Logo 和可拖动区域 */}
-                <div className='h-[35px] p-[5px]'>
-                    <div className='w-full h-full' data-tauri-drag-region='true' />
-                </div>
-                
-                <SideBar />
-            </Card>
+  return (
+    <>
+      {/* 侧边栏 */}
+      <Card
+        shadow="none"
+        className={`${
+          transparent ? 'bg-background/90' : 'bg-content1'
+        } float-left h-screen w-[230px] rounded-none ${
+          osType === 'Linux' && 'rounded-l-[10px] border-1'
+        } cursor-default select-none border-r-1 border-default-100`}
+      >
+        {/* Logo 和可拖动区域 */}
+        <div className="h-[35px] p-[5px]">
+          <div className="h-full w-full" data-tauri-drag-region="true" />
+        </div>
 
-            {/* 主内容区 */}
-            <div className={`bg-background ml-[230px] h-screen`}>
-                {/* 标题栏 */}
-                <div className='h-[35px] flex justify-between'>
-                    <h2>{t(`config.${location.pathname.slice(1)}.title`)}</h2>
-                    {osType !== 'Darwin' && <WindowControl />}
-                </div>
-                
-                {/* 滚动内容 */}
-                <div className='p-[10px] overflow-y-auto h-[calc(100vh-36px)]'>
-                    {page}
-                </div>
-            </div>
-        </>
-    );
+        <SideBar />
+      </Card>
+
+      {/* 主内容区 */}
+      <div className={`ml-[230px] h-screen bg-background`}>
+        {/* 标题栏 */}
+        <div className="flex h-[35px] justify-between">
+          <h2>{t(`config.${location.pathname.slice(1)}.title`)}</h2>
+          {osType !== 'Darwin' && <WindowControl />}
+        </div>
+
+        {/* 滚动内容 */}
+        <div className="h-[calc(100vh-36px)] overflow-y-auto p-[10px]">{page}</div>
+      </div>
+    </>
+  )
 }
 ```
 
 **布局设计要点表：**
 
-| 设计要点         | 实现方式                      | 代码位置                      | 学习价值 |
-| ---------------- | ----------------------------- | ----------------------------- | -------- |
-| **固定侧边栏**   | `float-left w-[230px]`        | `Config/index.jsx` (28-35行)  | ⭐⭐⭐⭐⭐    |
-| **自定义拖动区** | `data-tauri-drag-region`      | `Config/index.jsx` (36-40行)  | ⭐⭐⭐⭐⭐    |
-| **平台差异化**   | 条件渲染 `osType === 'Linux'` | `Config/index.jsx` (33, 56行) | ⭐⭐⭐⭐⭐    |
-| **透明背景**     | `bg-background/90`            | `Config/index.jsx` (31行)     | ⭐⭐⭐⭐     |
-| **计算高度**     | `h-[calc(100vh-36px)]`        | `Config/index.jsx` (72-74行)  | ⭐⭐⭐⭐     |
+| 设计要点         | 实现方式                      | 代码位置                      | 学习价值   |
+| ---------------- | ----------------------------- | ----------------------------- | ---------- |
+| **固定侧边栏**   | `float-left w-[230px]`        | `Config/index.jsx` (28-35行)  | ⭐⭐⭐⭐⭐ |
+| **自定义拖动区** | `data-tauri-drag-region`      | `Config/index.jsx` (36-40行)  | ⭐⭐⭐⭐⭐ |
+| **平台差异化**   | 条件渲染 `osType === 'Linux'` | `Config/index.jsx` (33, 56行) | ⭐⭐⭐⭐⭐ |
+| **透明背景**     | `bg-background/90`            | `Config/index.jsx` (31行)     | ⭐⭐⭐⭐   |
+| **计算高度**     | `h-[calc(100vh-36px)]`        | `Config/index.jsx` (72-74行)  | ⭐⭐⭐⭐   |
 
 ### 10.3 主题系统实现
 
@@ -1289,24 +1294,26 @@ export default function Config() {
 文件：`src/hooks/useToastStyle.jsx`
 
 ```javascript
-import { semanticColors } from '@nextui-org/theme';
-import { useTheme } from 'next-themes';
+import { semanticColors } from '@nextui-org/theme'
+import { useTheme } from 'next-themes'
 
 export const useToastStyle = () => {
-    const { theme } = useTheme();
-    
-    const toastStyle = {
-        background: theme == 'dark' 
-            ? semanticColors.dark.content1.DEFAULT 
-            : semanticColors.light.content1.DEFAULT,
-        color: theme == 'dark' 
-            ? semanticColors.dark.foreground.DEFAULT 
-            : semanticColors.light.foreground.DEFAULT,
-        wordBreak: 'break-all',
-    };
+  const { theme } = useTheme()
 
-    return toastStyle;
-};
+  const toastStyle = {
+    background:
+      theme == 'dark'
+        ? semanticColors.dark.content1.DEFAULT
+        : semanticColors.light.content1.DEFAULT,
+    color:
+      theme == 'dark'
+        ? semanticColors.dark.foreground.DEFAULT
+        : semanticColors.light.foreground.DEFAULT,
+    wordBreak: 'break-all',
+  }
+
+  return toastStyle
+}
 ```
 
 **主题系统设计表：**
@@ -1322,23 +1329,23 @@ export const useToastStyle = () => {
 ```javascript
 // themes/syncTheme.js
 export const syncTheme = {
-    light: {
-        primary: '#0070F0',      // 蓝色 - 同步进行中
-        success: '#17C964',      // 绿色 - 同步成功
-        warning: '#F5A524',      // 橙色 - 警告
-        danger: '#F31260',       // 红色 - 同步失败
-        background: '#FFFFFF',
-        foreground: '#11181C',
-    },
-    dark: {
-        primary: '#0072F5',
-        success: '#17C964',
-        warning: '#F5A524',
-        danger: '#F31260',
-        background: '#000000',
-        foreground: '#ECEDEE',
-    }
-};
+  light: {
+    primary: '#0070F0', // 蓝色 - 同步进行中
+    success: '#17C964', // 绿色 - 同步成功
+    warning: '#F5A524', // 橙色 - 警告
+    danger: '#F31260', // 红色 - 同步失败
+    background: '#FFFFFF',
+    foreground: '#11181C',
+  },
+  dark: {
+    primary: '#0072F5',
+    success: '#17C964',
+    warning: '#F5A524',
+    danger: '#F31260',
+    background: '#000000',
+    foreground: '#ECEDEE',
+  },
+}
 ```
 
 ### 10.4 交互反馈设计
@@ -1354,26 +1361,26 @@ export const syncTheme = {
 **使用示例：**
 
 ```javascript
-import toast from 'react-hot-toast';
-import { useToastStyle } from './hooks/useToastStyle';
+import toast from 'react-hot-toast'
+import { useToastStyle } from './hooks/useToastStyle'
 
 function SyncNotification() {
-    const toastStyle = useToastStyle();
+  const toastStyle = useToastStyle()
 
-    const notifySyncSuccess = () => {
-        toast.success('Sync completed!', {
-            style: toastStyle,
-            duration: 3000,
-            position: 'bottom-right',
-        });
-    };
+  const notifySyncSuccess = () => {
+    toast.success('Sync completed!', {
+      style: toastStyle,
+      duration: 3000,
+      position: 'bottom-right',
+    })
+  }
 
-    const notifySyncError = (error) => {
-        toast.error(`Sync failed: ${error}`, {
-            style: toastStyle,
-            duration: 5000,
-        });
-    };
+  const notifySyncError = error => {
+    toast.error(`Sync failed: ${error}`, {
+      style: toastStyle,
+      duration: 5000,
+    })
+  }
 }
 ```
 
@@ -1393,14 +1400,14 @@ function SyncNotification() {
 ```jsx
 // 可访问性最佳实践
 <Button
-    aria-label="Sync folder"
-    onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-            handleSync();
-        }
-    }}
+  aria-label="Sync folder"
+  onKeyDown={e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      handleSync()
+    }
+  }}
 >
-    Sync
+  Sync
 </Button>
 ```
 
@@ -1426,15 +1433,15 @@ function SyncNotification() {
 
 ```json
 {
-    "updater": {
-        "active": true,
-        "dialog": false,
-        "endpoints": [
-            "https://dl.pot-app.com/https://github.com/pot-app/pot-desktop/releases/download/updater/update.json",
-            "https://github.com/pot-app/pot-desktop/releases/download/updater/update.json"
-        ],
-        "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6..."
-    }
+  "updater": {
+    "active": true,
+    "dialog": false,
+    "endpoints": [
+      "https://dl.pot-app.com/https://github.com/pot-app/pot-desktop/releases/download/updater/update.json",
+      "https://github.com/pot-app/pot-desktop/releases/download/updater/update.json"
+    ],
+    "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6..."
+  }
 }
 ```
 
@@ -1442,10 +1449,10 @@ function SyncNotification() {
 
 | 配置项        | 说明               | pot-desktop 配置 | LightSync 建议  |
 | ------------- | ------------------ | ---------------- | --------------- |
-| **active**    | 启用更新功能       | `true`           | ✅ 保持启用      |
+| **active**    | 启用更新功能       | `true`           | ✅ 保持启用     |
 | **dialog**    | 显示内置更新对话框 | `false`          | `true` 简化实现 |
-| **endpoints** | 更新服务器列表     | 多个备用地址     | ✅ 国内外镜像    |
-| **pubkey**    | 公钥签名验证       | minisign 公钥    | ✅ 防止篡改      |
+| **endpoints** | 更新服务器列表     | 多个备用地址     | ✅ 国内外镜像   |
+| **pubkey**    | 公钥签名验证       | minisign 公钥    | ✅ 防止篡改     |
 
 ### 11.2 更新检查实现
 
@@ -1467,7 +1474,7 @@ pub fn check_update(app_handle: tauri::AppHandle) {
             true
         }
     };
-    
+
     if enable {
         // 异步检查更新，不阻塞主线程
         tauri::async_runtime::spawn(async move {
@@ -1502,27 +1509,27 @@ pub fn check_update(app_handle: tauri::AppHandle) {
 
 ```json
 {
-    "version": "3.0.7",
-    "notes": "Bug fixes and performance improvements",
-    "pub_date": "2024-01-15T10:00:00Z",
-    "platforms": {
-        "darwin-x86_64": {
-            "signature": "base64_signature_here",
-            "url": "https://github.com/pot-app/pot-desktop/releases/download/3.0.7/pot_3.0.7_x64.app.tar.gz"
-        },
-        "darwin-aarch64": {
-            "signature": "base64_signature_here",
-            "url": "https://github.com/pot-app/pot-desktop/releases/download/3.0.7/pot_3.0.7_aarch64.app.tar.gz"
-        },
-        "windows-x86_64": {
-            "signature": "base64_signature_here",
-            "url": "https://github.com/pot-app/pot-desktop/releases/download/3.0.7/pot_3.0.7_x64_en-US.msi.zip"
-        },
-        "linux-x86_64": {
-            "signature": "base64_signature_here",
-            "url": "https://github.com/pot-app/pot-desktop/releases/download/3.0.7/pot_3.0.7_amd64.AppImage.tar.gz"
-        }
+  "version": "3.0.7",
+  "notes": "Bug fixes and performance improvements",
+  "pub_date": "2024-01-15T10:00:00Z",
+  "platforms": {
+    "darwin-x86_64": {
+      "signature": "base64_signature_here",
+      "url": "https://github.com/pot-app/pot-desktop/releases/download/3.0.7/pot_3.0.7_x64.app.tar.gz"
+    },
+    "darwin-aarch64": {
+      "signature": "base64_signature_here",
+      "url": "https://github.com/pot-app/pot-desktop/releases/download/3.0.7/pot_3.0.7_aarch64.app.tar.gz"
+    },
+    "windows-x86_64": {
+      "signature": "base64_signature_here",
+      "url": "https://github.com/pot-app/pot-desktop/releases/download/3.0.7/pot_3.0.7_x64_en-US.msi.zip"
+    },
+    "linux-x86_64": {
+      "signature": "base64_signature_here",
+      "url": "https://github.com/pot-app/pot-desktop/releases/download/3.0.7/pot_3.0.7_amd64.AppImage.tar.gz"
     }
+  }
 }
 ```
 
@@ -1582,16 +1589,16 @@ pub async fn webdav(
         .set_host(url.clone())
         .set_auth(Auth::Basic(username.clone(), password.clone()))
         .build()?;
-    
+
     // 创建根目录
     client.mkcol("/pot-app").await.unwrap_or_default();
-    
+
     // 切换到应用目录
     let client = ClientBuilder::new()
         .set_host(format!("{}/pot-app", url.trim_end_matches("/")))
         .set_auth(Auth::Basic(username, password))
         .build()?;
-    
+
     match operate {
         "list" => {
             let res = client.list("/", Depth::Number(1)).await?;
@@ -1672,8 +1679,8 @@ zip.finish()?;
 
 **备份内容清单表：**
 
-| 文件类型       | 路径          | 必备性   | 大小估算 |
-| -------------- | ------------- | -------- | -------- |
+| 文件类型       | 路径          | 必备性    | 大小估算 |
+| -------------- | ------------- | --------- | -------- |
 | **配置文件**   | `config.json` | ✅ 必须   | <100KB   |
 | **历史数据库** | `history.db`  | ⚠️ 可选   | 1-10MB   |
 | **插件目录**   | `plugins/`    | ⚠️ 可选   | 10-100MB |
@@ -1698,7 +1705,7 @@ impl BackupContent {
             "*.tmp",
             "*.log",
         ];
-        
+
         // 检查文件是否应该备份
         !exclude_patterns.iter().any(|p| path.matches(p))
     }
@@ -1738,17 +1745,17 @@ pub async fn aliyun(operate: &str, path: String, url: String) -> Result<String, 
             // 使用 GET 请求下载文件
             let res = reqwest::Client::new().get(&url).send().await?;
             let data = res.bytes().await?;
-            
+
             // 保存并解压
             let zip_path = config_dir_path.join("archive.zip");
             let mut zip_file = std::fs::File::create(&zip_path)?;
             zip_file.write_all(&data)?;
-            
+
             // 解压到配置目录
             let mut zip_file = std::fs::File::open(&zip_path)?;
             let mut zip = ZipArchive::new(&mut zip_file)?;
             zip.extract(config_dir_path)?;
-            
+
             Ok("".to_string())
         }
         _ => Err(Error::Error("Invalid operation".into())),
@@ -1791,41 +1798,42 @@ impl CloudStorage for AwsS3Storage { /* ... */ }
 文件：`vite.config.js`
 
 ```javascript
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vite'
+import { resolve } from 'path'
 
 export default defineConfig(async () => ({
-    plugins: [react()],
-    
-    clearScreen: false, // 不清屏，查看 Rust 错误
-    
-    server: {
-        port: 1420,
-        strictPort: true, // 端口必须可用
+  plugins: [react()],
+
+  clearScreen: false, // 不清屏，查看 Rust 错误
+
+  server: {
+    port: 1420,
+    strictPort: true, // 端口必须可用
+  },
+
+  envPrefix: ['VITE_', 'TAURI_'], // 环境变量前缀
+
+  build: {
+    rollupOptions: {
+      input: {
+        index: resolve(__dirname, 'index.html'), // 主窗口
+        daemon: resolve(__dirname, 'daemon.html'), // 守护进程窗口
+      },
     },
-    
-    envPrefix: ['VITE_', 'TAURI_'], // 环境变量前缀
-    
-    build: {
-        rollupOptions: {
-            input: {
-                index: resolve(__dirname, 'index.html'),     // 主窗口
-                daemon: resolve(__dirname, 'daemon.html'),   // 守护进程窗口
-            },
-        },
-        // 根据平台选择目标浏览器
-        target: process.env.TAURI_PLATFORM == 'windows' 
-            ? 'chrome105'  // Windows WebView2
-            : 'safari11',  // macOS WKWebView
-        
-        // Debug 模式不压缩
-        minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
-        
-        // Debug 模式生成 sourcemap
-        sourcemap: !!process.env.TAURI_DEBUG,
-    },
-}));
+    // 根据平台选择目标浏览器
+    target:
+      process.env.TAURI_PLATFORM == 'windows'
+        ? 'chrome105' // Windows WebView2
+        : 'safari11', // macOS WKWebView
+
+    // Debug 模式不压缩
+    minify: !process.env.TAURI_DEBUG ? 'esbuild' : false,
+
+    // Debug 模式生成 sourcemap
+    sourcemap: !!process.env.TAURI_DEBUG,
+  },
+}))
 ```
 
 **构建优化配置表：**
@@ -1851,18 +1859,18 @@ edition = "2021"
 
 [dependencies]
 tauri = { version = "1.8", features = [
-    "dialog-save", 
-    "dialog-open", 
-    "fs-all", 
-    "protocol-asset", 
-    "shell-all", 
-    "clipboard-all", 
-    "http-all", 
-    "updater", 
-    "notification-all", 
-    "global-shortcut-all", 
-    "window-all", 
-    "system-tray", 
+    "dialog-save",
+    "dialog-open",
+    "fs-all",
+    "protocol-asset",
+    "shell-all",
+    "clipboard-all",
+    "http-all",
+    "updater",
+    "notification-all",
+    "global-shortcut-all",
+    "window-all",
+    "system-tray",
     "devtools"
 ] }
 
@@ -1894,7 +1902,7 @@ window-shadows = "0.2"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version="0.58.0", features= [
-    "Win32_UI_WindowsAndMessaging", 
+    "Win32_UI_WindowsAndMessaging",
     "Win32_Foundation"
 ] }
 window-shadows = "0.2"
@@ -1913,13 +1921,13 @@ strip = true
 
 **依赖管理最佳实践表：**
 
-| 实践             | 说明                   | 示例                                   | 学习价值       |
-| ---------------- | ---------------------- | -------------------------------------- | -------------- |
+| 实践             | 说明                   | 示例                                   | 学习价值            |
+| ---------------- | ---------------------- | -------------------------------------- | ------------------- |
 | **Feature 控制** | 只启用需要的功能       | `tauri = { features = ["fs-all"] }`    | ⭐⭐⭐⭐⭐ 减小体积 |
-| **版本锁定**     | 锁定特定版本           | `reqwest_dav = "=0.1.5"`               | ⭐⭐⭐⭐ 稳定性    |
+| **版本锁定**     | 锁定特定版本           | `reqwest_dav = "=0.1.5"`               | ⭐⭐⭐⭐ 稳定性     |
 | **平台条件编译** | 仅在特定平台编译       | `[target.'cfg(windows)'.dependencies]` | ⭐⭐⭐⭐⭐ 跨平台   |
-| **LTO 优化**     | Link Time Optimization | `lto = true`                           | ⭐⭐⭐⭐ 性能提升  |
-| **Strip 符号**   | 移除调试符号           | `strip = true`                         | ⭐⭐⭐⭐ 减小体积  |
+| **LTO 优化**     | Link Time Optimization | `lto = true`                           | ⭐⭐⭐⭐ 性能提升   |
+| **Strip 符号**   | 移除调试符号           | `strip = true`                         | ⭐⭐⭐⭐ 减小体积   |
 
 ### 13.3 打包配置
 
@@ -1929,42 +1937,37 @@ strip = true
 
 ```json
 {
-    "bundle": {
-        "active": true,
-        "category": "Utility",
-        "copyright": "GPLv3",
-        "targets": "all",
-        "identifier": "com.pot-app.desktop",
-        "longDescription": "A cross-platform text translation and ocr software",
-        "shortDescription": "Pot App",
-        "externalBin": [],
-        "resources": [],
-        "icon": [
-            "icons/32x32.png",
-            "icons/128x128.png",
-            "icons/128x128@2x.png",
-            "icons/icon.icns",    // macOS
-            "icons/icon.ico"      // Windows
-        ],
-        "deb": {
-            "depends": [
-                "libxdo-dev",
-                "libxcb1",
-                "libxrandr2",
-                "tesseract-ocr"
-            ]
-        },
-        "macOS": {
-            "entitlements": null,
-            "frameworks": [],
-            "signingIdentity": null
-        },
-        "windows": {
-            "certificateThumbprint": null,
-            "digestAlgorithm": "sha256",
-            "timestampUrl": ""
-        }
+  "bundle": {
+    "active": true,
+    "category": "Utility",
+    "copyright": "GPLv3",
+    "targets": "all",
+    "identifier": "com.pot-app.desktop",
+    "longDescription": "A cross-platform text translation and ocr software",
+    "shortDescription": "Pot App",
+    "externalBin": [],
+    "resources": [],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns", // macOS
+      "icons/icon.ico" // Windows
+    ],
+    "deb": {
+      "depends": ["libxdo-dev", "libxcb1", "libxrandr2", "tesseract-ocr"]
+    },
+    "macOS": {
+      "entitlements": null,
+      "frameworks": [],
+      "signingIdentity": null
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
     }
+  }
 }
 ```
 
@@ -1994,20 +1997,20 @@ jobs:
     strategy:
       matrix:
         platform: [macos-latest, ubuntu-20.04, windows-latest]
-    
+
     runs-on: ${{ matrix.platform }}
-    
+
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
-      
+
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-      
+
       - name: Install dependencies (Ubuntu)
         if: matrix.platform == 'ubuntu-20.04'
         run: |
@@ -2020,13 +2023,13 @@ jobs:
             libgtk-3-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev
-      
+
       - name: Install frontend dependencies
         run: pnpm install
-      
+
       - name: Build application
         run: pnpm tauri build
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -2036,8 +2039,8 @@ jobs:
 
 **构建流程检查表：**
 
-| 阶段         | 检查项          | 工具             | 自动化       |
-| ------------ | --------------- | ---------------- | ------------ |
+| 阶段         | 检查项          | 工具             | 自动化        |
+| ------------ | --------------- | ---------------- | ------------- |
 | **代码检查** | Lint、Format    | Prettier, Clippy | ✅ Pre-commit |
 | **单元测试** | 函数逻辑测试    | `cargo test`     | ✅ CI         |
 | **集成测试** | 端到端测试      | Playwright       | ⚠️ 半自动     |
@@ -2053,36 +2056,36 @@ jobs:
 
 **🔴 P0 - 必须掌握（LightSync 项目核心）：**
 
-| 技术点                 | 文件位置                      | 学习价值 | 应用场景     |
-| ---------------------- | ----------------------------- | -------- | ------------ |
-| **Tauri 最小权限配置** | `tauri.conf.json` (14-63行)   | ⭐⭐⭐⭐⭐    | 安全性基础   |
-| **配置持久化管理**     | `config.rs` + `useConfig.jsx` | ⭐⭐⭐⭐⭐    | 用户配置保存 |
-| **统一错误处理**       | `error.rs`                    | ⭐⭐⭐⭐⭐    | 稳定性保障   |
-| **窗口管理与多显示器** | `window.rs`                   | ⭐⭐⭐⭐⭐    | 用户体验     |
-| **WebDAV 客户端实现**  | `backup.rs`                   | ⭐⭐⭐⭐⭐    | 核心同步功能 |
-| **异步任务处理**       | `backup.rs` (10行)            | ⭐⭐⭐⭐⭐    | 性能关键     |
+| 技术点                 | 文件位置                      | 学习价值   | 应用场景     |
+| ---------------------- | ----------------------------- | ---------- | ------------ |
+| **Tauri 最小权限配置** | `tauri.conf.json` (14-63行)   | ⭐⭐⭐⭐⭐ | 安全性基础   |
+| **配置持久化管理**     | `config.rs` + `useConfig.jsx` | ⭐⭐⭐⭐⭐ | 用户配置保存 |
+| **统一错误处理**       | `error.rs`                    | ⭐⭐⭐⭐⭐ | 稳定性保障   |
+| **窗口管理与多显示器** | `window.rs`                   | ⭐⭐⭐⭐⭐ | 用户体验     |
+| **WebDAV 客户端实现**  | `backup.rs`                   | ⭐⭐⭐⭐⭐ | 核心同步功能 |
+| **异步任务处理**       | `backup.rs` (10行)            | ⭐⭐⭐⭐⭐ | 性能关键     |
 
 **🟡 P1 - 推荐学习（提升项目质量）：**
 
-| 技术点           | 文件位置                  | 学习价值 | 应用场景     |
-| ---------------- | ------------------------- | -------- | ------------ |
-| **系统托盘集成** | `tray.rs`                 | ⭐⭐⭐⭐     | 后台运行     |
-| **全局快捷键**   | `hotkey.rs`               | ⭐⭐⭐⭐     | 快速操作     |
-| **HTTP服务器**   | `server.rs`               | ⭐⭐⭐⭐     | 外部调用接口 |
-| **插件系统**     | `cmd.rs` (131-176行)      | ⭐⭐⭐⭐     | 功能扩展     |
-| **平台特定代码** | `system_ocr.rs`           | ⭐⭐⭐⭐⭐    | 跨平台兼容   |
-| **防抖优化**     | `useConfig.jsx` (13行)    | ⭐⭐⭐⭐⭐    | 性能优化     |
-| **事件系统**     | `useConfig.jsx` (49-56行) | ⭐⭐⭐⭐     | 配置同步     |
-| **代理配置**     | `cmd.rs` (99-128行)       | ⭐⭐⭐⭐     | 网络配置     |
+| 技术点           | 文件位置                  | 学习价值   | 应用场景     |
+| ---------------- | ------------------------- | ---------- | ------------ |
+| **系统托盘集成** | `tray.rs`                 | ⭐⭐⭐⭐   | 后台运行     |
+| **全局快捷键**   | `hotkey.rs`               | ⭐⭐⭐⭐   | 快速操作     |
+| **HTTP服务器**   | `server.rs`               | ⭐⭐⭐⭐   | 外部调用接口 |
+| **插件系统**     | `cmd.rs` (131-176行)      | ⭐⭐⭐⭐   | 功能扩展     |
+| **平台特定代码** | `system_ocr.rs`           | ⭐⭐⭐⭐⭐ | 跨平台兼容   |
+| **防抖优化**     | `useConfig.jsx` (13行)    | ⭐⭐⭐⭐⭐ | 性能优化     |
+| **事件系统**     | `useConfig.jsx` (49-56行) | ⭐⭐⭐⭐   | 配置同步     |
+| **代理配置**     | `cmd.rs` (99-128行)       | ⭐⭐⭐⭐   | 网络配置     |
 
 **⚪ P2 - 进阶学习（提升代码质量）：**
 
-| 技术点           | 文件位置                  | 学习价值 | 应用场景     |
-| ---------------- | ------------------------- | -------- | ------------ |
-| **图片处理**     | `cmd.rs` (24-96行)        | ⭐⭐⭐      | OCR功能      |
-| **文件系统监听** | `store.js` (12-15行)      | ⭐⭐⭐⭐     | 配置热重载   |
-| **缓存管理**     | `screenshot.rs` (16-22行) | ⭐⭐⭐      | 临时文件管理 |
-| **条件编译**     | `system_ocr.rs`           | ⭐⭐⭐⭐⭐    | 平台差异化   |
+| 技术点           | 文件位置                  | 学习价值   | 应用场景     |
+| ---------------- | ------------------------- | ---------- | ------------ |
+| **图片处理**     | `cmd.rs` (24-96行)        | ⭐⭐⭐     | OCR功能      |
+| **文件系统监听** | `store.js` (12-15行)      | ⭐⭐⭐⭐   | 配置热重载   |
+| **缓存管理**     | `screenshot.rs` (16-22行) | ⭐⭐⭐     | 临时文件管理 |
+| **条件编译**     | `system_ocr.rs`           | ⭐⭐⭐⭐⭐ | 平台差异化   |
 
 ---
 
@@ -2104,7 +2107,7 @@ pub fn install_plugin(path_list: Vec<String>) -> Result<i32, Error> {
         if !path.ends_with("potext") {
             continue;
         }
-        
+
         // ✅ 验证插件名称格式
         let file_name = file_name.replace(".potext", "");
         if !file_name.starts_with("plugin") {
@@ -2126,11 +2129,11 @@ pub fn install_plugin(path_list: Vec<String>) -> Result<i32, Error> {
         } else {
             return Err(Error::Error("Invalid Plugin: miss info.json".into()));
         }
-        
+
         if zip.by_name("main.js").is_err() {
             return Err(Error::Error("Invalid Plugin: miss main.js".into()));
         }
-        
+
         // ✅ 解压到指定目录
         let config_path = config_dir().unwrap();
         let config_path = config_path.join(
@@ -2139,7 +2142,7 @@ pub fn install_plugin(path_list: Vec<String>) -> Result<i32, Error> {
         let config_path = config_path.join("plugins");
         let config_path = config_path.join(plugin_type);
         let plugin_path = config_path.join(file_name);
-        
+
         std::fs::create_dir_all(&config_path)?;
         zip.extract(&plugin_path)?;
 
@@ -2151,13 +2154,13 @@ pub fn install_plugin(path_list: Vec<String>) -> Result<i32, Error> {
 
 **插件系统设计要点表：**
 
-| 设计要点     | 实现方式                          | 代码位置             | 学习价值     |
-| ------------ | --------------------------------- | -------------------- | ------------ |
+| 设计要点     | 实现方式                          | 代码位置             | 学习价值          |
+| ------------ | --------------------------------- | -------------------- | ----------------- |
 | **插件验证** | 检查文件扩展名和名称格式          | `cmd.rs` (135-145行) | ⭐⭐⭐⭐⭐ 安全性 |
 | **结构验证** | 检查必需文件 (info.json, main.js) | `cmd.rs` (150-163行) | ⭐⭐⭐⭐⭐ 完整性 |
-| **类型分类** | 按 plugin_type 分类存储           | `cmd.rs` (154-158行) | ⭐⭐⭐⭐ 组织性  |
-| **目录隔离** | 不同插件类型独立目录              | `cmd.rs` (164-169行) | ⭐⭐⭐⭐ 模块化  |
-| **批量安装** | 支持一次安装多个插件              | `cmd.rs` (131行)     | ⭐⭐⭐ 效率     |
+| **类型分类** | 按 plugin_type 分类存储           | `cmd.rs` (154-158行) | ⭐⭐⭐⭐ 组织性   |
+| **目录隔离** | 不同插件类型独立目录              | `cmd.rs` (164-169行) | ⭐⭐⭐⭐ 模块化   |
+| **批量安装** | 支持一次安装多个插件              | `cmd.rs` (131行)     | ⭐⭐⭐ 效率       |
 
 ### 14.2 插件发现机制
 
@@ -2181,7 +2184,7 @@ pub fn get_plugin_list(plugin_type: &str) -> Option<Vec<String>> {
         let read_dir = std::fs::read_dir(plugin_dir).ok()?;
         for entry in read_dir {
             let entry = entry.ok()?;
-            
+
             if entry.path().is_dir() {
                 let name = entry.file_name().to_str()?.to_string();
                 if name.starts_with("plugin") {
@@ -2199,8 +2202,8 @@ pub fn get_plugin_list(plugin_type: &str) -> Option<Vec<String>> {
 
 **插件管理最佳实践：**
 
-| 实践         | 说明                   | 代码位置                | LightSync 应用      |
-| ------------ | ---------------------- | ----------------------- | ------------------- |
+| 实践         | 说明                   | 代码位置                | LightSync 应用       |
+| ------------ | ---------------------- | ----------------------- | -------------------- |
 | **命名规范** | 必须以 `plugin` 开头   | `config.rs` (156行)     | ✅ 同步规则插件      |
 | **自动清理** | 删除不符合规范的插件   | `config.rs` (159-161行) | ✅ 维护插件目录      |
 | **类型隔离** | 按功能类型分类         | `config.rs` (145行)     | ✅ 同步/备份插件分离 |
@@ -2239,7 +2242,7 @@ pub fn run_binary(
     let cmd = cmd.creation_flags(0x08000000);  // CREATE_NO_WINDOW
     #[cfg(target_os = "windows")]
     let cmd = cmd.args(["/c", &cmd_name]);
-    
+
     // ✅ Unix 平台直接执行
     #[cfg(not(target_os = "windows"))]
     let mut cmd = Command::new(&cmd_name);
@@ -2256,8 +2259,8 @@ pub fn run_binary(
 
 **插件执行安全要点：**
 
-| 安全措施         | 实现方式           | 代码位置             | 重要性            |
-| ---------------- | ------------------ | -------------------- | ----------------- |
+| 安全措施         | 实现方式           | 代码位置             | 重要性             |
+| ---------------- | ------------------ | -------------------- | ------------------ |
 | **工作目录限制** | 仅在插件目录执行   | `cmd.rs` (204行)     | 🔴 P0 防止路径遍历 |
 | **无窗口执行**   | Windows 隐藏控制台 | `cmd.rs` (198行)     | 🟡 P1 用户体验     |
 | **输出捕获**     | 捕获 stdout/stderr | `cmd.rs` (205-208行) | 🟡 P1 错误处理     |
@@ -2284,7 +2287,7 @@ pub fn start_server() {
             60828
         }
     };
-    
+
     // ✅ 在独立线程中运行服务器
     thread::spawn(move || {
         let server = match Server::http(format!("127.0.0.1:{port}")) {
@@ -2299,7 +2302,7 @@ pub fn start_server() {
                 return;
             }
         };
-        
+
         // ✅ 阻塞式处理请求
         for request in server.incoming_requests() {
             http_handle(request);
@@ -2310,8 +2313,8 @@ pub fn start_server() {
 
 **HTTP 服务器设计要点：**
 
-| 特性         | 实现方式           | 代码位置              | LightSync 应用 |
-| ------------ | ------------------ | --------------------- | -------------- |
+| 特性         | 实现方式           | 代码位置              | LightSync 应用  |
+| ------------ | ------------------ | --------------------- | --------------- |
 | **端口配置** | 可配置，默认 60828 | `server.rs` (9-15行)  | ✅ 同步服务端口 |
 | **错误处理** | 启动失败时通知用户 | `server.rs` (19-25行) | ✅ 友好错误提示 |
 | **独立线程** | 不阻塞主线程       | `server.rs` (16行)    | ✅ 后台服务     |
@@ -2345,8 +2348,8 @@ fn http_handle(request: Request) {
 
 **路由设计模式：**
 
-| 模式         | 实现方式              | 优势     | LightSync 应用                 |
-| ------------ | --------------------- | -------- | ------------------------------ |
+| 模式         | 实现方式              | 优势     | LightSync 应用                  |
+| ------------ | --------------------- | -------- | ------------------------------- |
 | **路径匹配** | `match request.url()` | 简单直接 | ✅ `/sync`, `/pause`, `/status` |
 | **参数解析** | URL 查询参数          | 灵活配置 | ✅ `/sync?folder=1&force=true`  |
 | **统一响应** | `response_ok()` 函数  | 简化代码 | ✅ 统一返回 JSON                |
@@ -2371,11 +2374,11 @@ fn handle_sync(mut request: Request) {
     let mut content = String::new();
     request.as_reader().read_to_string(&mut content).unwrap();
     let params: serde_json::Value = serde_json::from_str(&content).unwrap();
-    
+
     // 触发同步
     let folder_id = params["folder_id"].as_str();
     let force = params["force"].as_bool().unwrap_or(false);
-    
+
     // 返回 JSON 响应
     let response = Response::from_string(
         serde_json::to_string(&json!({
@@ -2401,21 +2404,21 @@ fn handle_sync(mut request: Request) {
 ```javascript
 // 初始化
 useEffect(() => {
-    syncToState(null);
-    const eventKey = key.replaceAll('.', '_').replaceAll('@', ':');
-    
-    // ✅ 监听配置变更事件
-    const unlisten = listen(`${eventKey}_changed`, (e) => {
-        syncToState(e.payload);
-    });
-    
-    // ✅ 清理函数：取消监听
-    return () => {
-        unlisten.then((f) => {
-            f();
-        });
-    };
-}, []);
+  syncToState(null)
+  const eventKey = key.replaceAll('.', '_').replaceAll('@', ':')
+
+  // ✅ 监听配置变更事件
+  const unlisten = listen(`${eventKey}_changed`, e => {
+    syncToState(e.payload)
+  })
+
+  // ✅ 清理函数：取消监听
+  return () => {
+    unlisten.then(f => {
+      f()
+    })
+  }
+}, [])
 ```
 
 **事件命名规范：**
@@ -2429,8 +2432,8 @@ useEffect(() => {
 
 **事件系统优势表：**
 
-| 优势       | 说明               | 代码位置                  | LightSync 应用         |
-| ---------- | ------------------ | ------------------------- | ---------------------- |
+| 优势       | 说明               | 代码位置                  | LightSync 应用          |
+| ---------- | ------------------ | ------------------------- | ----------------------- |
 | **解耦**   | 发布者与订阅者分离 | `useConfig.jsx` (49-51行) | ✅ 配置与UI解耦         |
 | **实时性** | 配置变更立即生效   | `useConfig.jsx` (13-20行) | ✅ 同步状态实时更新     |
 | **跨窗口** | 多窗口配置同步     | `store.js` (12-15行)      | ✅ 主窗口与设置窗口同步 |
@@ -2448,12 +2451,12 @@ useEffect(() => {
 
 ```javascript
 export const debounce = (fn, delay = 500) => {
-    let timer = null;
-    return (...args) => {
-        timer && clearTimeout(timer);  // ✅ 取消之前的定时器
-        timer = setTimeout(() => fn(...args), delay);  // ✅ 重新设置定时器
-    };
-};
+  let timer = null
+  return (...args) => {
+    timer && clearTimeout(timer) // ✅ 取消之前的定时器
+    timer = setTimeout(() => fn(...args), delay) // ✅ 重新设置定时器
+  }
+}
 ```
 
 **防抖应用场景：**
@@ -2463,14 +2466,14 @@ export const debounce = (fn, delay = 500) => {
 ```javascript
 // 同步到Store (State -> Store)
 const syncToStore = useCallback(
-    debounce((v) => {
-        store.set(key, v);
-        store.save();
-        let eventKey = key.replaceAll('.', '_').replaceAll('@', ':');
-        emit(`${eventKey}_changed`, v);
-    }),
-    []
-);
+  debounce(v => {
+    store.set(key, v)
+    store.save()
+    let eventKey = key.replaceAll('.', '_').replaceAll('@', ':')
+    emit(`${eventKey}_changed`, v)
+  }),
+  []
+)
 ```
 
 **防抖与节流对比表：**
@@ -2485,19 +2488,19 @@ const syncToStore = useCallback(
 
 ```javascript
 // 建议：文件变更事件防抖
-import { debounce } from '../utils';
+import { debounce } from '../utils'
 
-const debouncedSync = debounce((folderId) => {
-    invoke('trigger_sync', { folderId });
-}, 2000);  // 2秒内多次变更只触发一次同步
+const debouncedSync = debounce(folderId => {
+  invoke('trigger_sync', { folderId })
+}, 2000) // 2秒内多次变更只触发一次同步
 
 // 使用
 useEffect(() => {
-    const unlisten = listen('file_changed', (event) => {
-        debouncedSync(event.payload.folderId);
-    });
-    return () => unlisten.then(f => f());
-}, []);
+  const unlisten = listen('file_changed', event => {
+    debouncedSync(event.payload.folderId)
+  })
+  return () => unlisten.then(f => f())
+}, [])
 ```
 
 ### 16.2 内存优化
@@ -2510,11 +2513,11 @@ useEffect(() => {
 pub fn start_clipboard_monitor(app_handle: tauri::AppHandle) {
     tauri::async_runtime::spawn(async move {
         let mut pre_text = "".to_string();  // ✅ 缓存上一次内容
-        
+
         loop {
             let handle = app_handle.app_handle();
             let state = handle.state::<ClipboardMonitorEnableWrapper>();
-            
+
             // ✅ 使用 try_lock 避免阻塞
             if let Ok(clipboard_monitor) = state.0.try_lock() {
                 if clipboard_monitor.contains("true") {
@@ -2597,7 +2600,7 @@ pub fn system_ocr(app_handle: tauri::AppHandle, lang: &str) -> Result<String, St
         .unwrap()
         .get()
         .unwrap();
-    
+
     // ...
 }
 ```
@@ -2629,7 +2632,7 @@ pub fn system_ocr(app_handle: tauri::AppHandle, lang: &str) -> Result<String, St
         Ok(_) => {}
         Err(e) => return Err(e.to_string()),
     }
-    
+
     // ...
 }
 ```
@@ -2658,7 +2661,7 @@ pub fn system_ocr(app_handle: tauri::AppHandle, lang: &str) -> Result<String, St
             return Err(e.to_string());
         }
     };
-    
+
     // ✅ 检查语言包是否安装
     if content.contains("data") {
         if lang == "auto" {
@@ -2678,12 +2681,12 @@ pub fn system_ocr(app_handle: tauri::AppHandle, lang: &str) -> Result<String, St
 
 **条件编译最佳实践表：**
 
-| 实践         | 实现方式                        | 代码位置                  | 学习价值         |
-| ------------ | ------------------------------- | ------------------------- | ---------------- |
+| 实践         | 实现方式                        | 代码位置                  | 学习价值              |
+| ------------ | ------------------------------- | ------------------------- | --------------------- |
 | **平台宏**   | `#[cfg(target_os = "windows")]` | `system_ocr.rs` (4行)     | ⭐⭐⭐⭐⭐ 编译时条件 |
-| **特性检测** | `#[cfg(feature = "...")]`       | Cargo.toml                | ⭐⭐⭐⭐ 可选功能    |
-| **架构检测** | `std::env::consts::ARCH`        | `system_ocr.rs` (70行)    | ⭐⭐⭐⭐ 架构区分    |
-| **友好错误** | 平台特定的错误消息              | `system_ocr.rs` (54-58行) | ⭐⭐⭐⭐ 用户体验    |
+| **特性检测** | `#[cfg(feature = "...")]`       | Cargo.toml                | ⭐⭐⭐⭐ 可选功能     |
+| **架构检测** | `std::env::consts::ARCH`        | `system_ocr.rs` (70行)    | ⭐⭐⭐⭐ 架构区分     |
+| **友好错误** | 平台特定的错误消息              | `system_ocr.rs` (54-58行) | ⭐⭐⭐⭐ 用户体验     |
 
 **LightSync 平台特定需求：**
 
@@ -2742,8 +2745,8 @@ pub fn watch_folder(path: &Path) -> Result<PollWatcher> {
 
 **平台窗口差异处理表：**
 
-| 平台         | 窗口样式         | 代码位置                | LightSync 应用        |
-| ------------ | ---------------- | ----------------------- | --------------------- |
+| 平台         | 窗口样式         | 代码位置                | LightSync 应用         |
+| ------------ | ---------------- | ----------------------- | ---------------------- |
 | **macOS**    | Overlay 标题栏   | `window.rs` (96-98行)   | ✅ 适配 macOS 设计规范 |
 | **Windows**  | 透明无边框       | `window.rs` (102行)     | ✅ 现代化 UI           |
 | **Linux**    | 透明无边框       | `window.rs` (102行)     | ✅ 统一体验            |
@@ -2763,33 +2766,33 @@ pub fn watch_folder(path: &Path) -> Result<PollWatcher> {
 #[tauri::command]
 pub fn screenshot(x: i32, y: i32) {
     use screenshots::{Compression, Screen};
-    
+
     info!("Screenshot screen with position: x={}, y={}", x, y);
-    
+
     // ✅ 遍历所有显示器
     let screens = Screen::all().unwrap();
     for screen in screens {
         let info = screen.display_info;
         info!("Screen: {:?}", info);
-        
+
         // ✅ 匹配指定位置的显示器
         if info.x == x && info.y == y {
             let handle = APP.get().unwrap();
             let mut app_cache_dir_path = cache_dir().expect("Get Cache Dir Failed");
             app_cache_dir_path.push(&handle.config().tauri.bundle.identifier);
-            
+
             // ✅ 确保缓存目录存在
             if !app_cache_dir_path.exists() {
                 fs::create_dir_all(&app_cache_dir_path).expect("Create Cache Dir Failed");
             }
-            
+
             app_cache_dir_path.push("pot_screenshot.png");
-            
+
             // ✅ 快速压缩
             let image = screen.capture().unwrap();
             let buffer = image.to_png(Compression::Fast).unwrap();
             fs::write(app_cache_dir_path, buffer).unwrap();
-            
+
             break;
         }
     }
@@ -2815,18 +2818,18 @@ pub fn screenshot(x: i32, y: i32) {
 #[tauri::command]
 pub fn cut_image(left: u32, top: u32, width: u32, height: u32, app_handle: tauri::AppHandle) {
     use image::GenericImage;
-    
+
     info!("Cut image: {}x{}+{}+{}", width, height, left, top);
-    
+
     let mut app_cache_dir_path = cache_dir().expect("Get Cache Dir Failed");
     app_cache_dir_path.push(&app_handle.config().tauri.bundle.identifier);
     app_cache_dir_path.push("pot_screenshot.png");
-    
+
     // ✅ 检查文件是否存在
     if !app_cache_dir_path.exists() {
         return;
     }
-    
+
     // ✅ 打开图片
     let mut img = match image::open(&app_cache_dir_path) {
         Ok(v) => v,
@@ -2835,10 +2838,10 @@ pub fn cut_image(left: u32, top: u32, width: u32, height: u32, app_handle: tauri
             return;
         }
     };
-    
+
     // ✅ 裁剪图片
     let img2 = img.sub_image(left, top, width, height);
-    
+
     // ✅ 保存裁剪后的图片
     app_cache_dir_path.pop();
     app_cache_dir_path.push("pot_screenshot_cut.png");
@@ -2861,16 +2864,16 @@ pub fn cut_image(left: u32, top: u32, width: u32, height: u32, app_handle: tauri
 #[tauri::command]
 pub fn get_base64(app_handle: tauri::AppHandle) -> String {
     use base64::{engine::general_purpose, Engine as _};
-    
+
     let mut app_cache_dir_path = cache_dir().expect("Get Cache Dir Failed");
     app_cache_dir_path.push(&app_handle.config().tauri.bundle.identifier);
     app_cache_dir_path.push("pot_screenshot_cut.png");
-    
+
     // ✅ 检查文件是否存在
     if !app_cache_dir_path.exists() {
         return "".to_string();
     }
-    
+
     // ✅ 读取文件内容
     let mut file = File::open(app_cache_dir_path).unwrap();
     let mut vec = Vec::new();
@@ -2881,7 +2884,7 @@ pub fn get_base64(app_handle: tauri::AppHandle) -> String {
             return "".to_string();
         }
     }
-    
+
     // ✅ Base64 编码并去除换行符
     let base64 = general_purpose::STANDARD.encode(&vec);
     base64.replace("\r\n", "")
@@ -2890,8 +2893,8 @@ pub fn get_base64(app_handle: tauri::AppHandle) -> String {
 
 **缓存管理最佳实践：**
 
-| 实践             | 实现方式               | 代码位置        | LightSync 应用 |
-| ---------------- | ---------------------- | --------------- | -------------- |
+| 实践             | 实现方式               | 代码位置        | LightSync 应用  |
+| ---------------- | ---------------------- | --------------- | --------------- |
 | **系统缓存目录** | `cache_dir()`          | `cmd.rs` (28行) | ✅ 同步临时文件 |
 | **应用隔离**     | 使用 bundle identifier | `cmd.rs` (29行) | ✅ 避免冲突     |
 | **文件检查**     | 操作前检查存在性       | `cmd.rs` (31行) | ✅ 防止错误     |
@@ -2950,8 +2953,8 @@ pub fn unset_proxy() -> Result<bool, ()> {
 ```rust
 match get("proxy_enable") {
     Some(v) => {
-        if v.as_bool().unwrap() 
-            && get("proxy_host").map_or(false, |host| !host.as_str().unwrap().is_empty()) 
+        if v.as_bool().unwrap()
+            && get("proxy_host").map_or(false, |host| !host.as_str().unwrap().is_empty())
         {
             let _ = set_proxy();
         }
@@ -2962,8 +2965,8 @@ match get("proxy_enable") {
 
 **代理配置管理表：**
 
-| 功能           | 实现方式       | 代码位置              | LightSync 应用     |
-| -------------- | -------------- | --------------------- | ------------------ |
+| 功能           | 实现方式       | 代码位置              | LightSync 应用      |
+| -------------- | -------------- | --------------------- | ------------------- |
 | **动态设置**   | 环境变量方式   | `cmd.rs` (114-117行)  | ✅ WebDAV 请求代理  |
 | **启动时加载** | 读取配置并应用 | `main.rs` (102-109行) | ✅ 自动应用代理设置 |
 | **条件启用**   | 检查配置开关   | `main.rs` (104行)     | ✅ 用户控制         |
@@ -2977,16 +2980,16 @@ use reqwest::Proxy;
 
 pub fn build_webdav_client(config: &ServerConfig) -> Result<Client> {
     let mut client_builder = ClientBuilder::new();
-    
+
     // ✅ 应用代理配置
     if let Some(proxy_config) = get_proxy_config() {
         if proxy_config.enabled {
-            let proxy = Proxy::http(&format!("http://{}:{}", 
+            let proxy = Proxy::http(&format!("http://{}:{}",
                 proxy_config.host, proxy_config.port))?;
             client_builder = client_builder.proxy(proxy);
         }
     }
-    
+
     Ok(client_builder.build()?)
 }
 ```

@@ -1,4 +1,4 @@
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api/core'
 
 /**
  * 获取当前运行环境信息
@@ -6,11 +6,11 @@ import { invoke } from '@tauri-apps/api/core';
  */
 export async function getRuntimeEnvironment(): Promise<string> {
   try {
-    const envInfo = await invoke<string>('get_runtime_environment');
-    return envInfo;
+    const envInfo = await invoke<string>('get_runtime_environment')
+    return envInfo
   } catch (error) {
-    console.error('获取运行环境信息失败:', error);
-    throw error;
+    console.error('获取运行环境信息失败:', error)
+    throw error
   }
 }
 
@@ -20,11 +20,11 @@ export async function getRuntimeEnvironment(): Promise<string> {
  */
 export async function getEnvironmentMode(): Promise<string> {
   try {
-    const mode = await invoke<string>('get_environment_mode');
-    return mode;
+    const mode = await invoke<string>('get_environment_mode')
+    return mode
   } catch (error) {
-    console.error('获取环境模式失败:', error);
-    throw error;
+    console.error('获取环境模式失败:', error)
+    throw error
   }
 }
 
@@ -34,12 +34,12 @@ export async function getEnvironmentMode(): Promise<string> {
  */
 export async function isDevelopmentMode(): Promise<boolean> {
   try {
-    const mode = await getEnvironmentMode();
-    return mode === 'development';
+    const mode = await getEnvironmentMode()
+    return mode === 'development'
   } catch (error) {
-    console.error('检查开发环境失败:', error);
+    console.error('检查开发环境失败:', error)
     // 如果无法获取环境信息，默认返回 false
-    return false;
+    return false
   }
 }
 
@@ -49,11 +49,11 @@ export async function isDevelopmentMode(): Promise<boolean> {
  */
 export async function isProductionMode(): Promise<boolean> {
   try {
-    const mode = await getEnvironmentMode();
-    return mode === 'production';
+    const mode = await getEnvironmentMode()
+    return mode === 'production'
   } catch (error) {
-    console.error('检查生产环境失败:', error);
+    console.error('检查生产环境失败:', error)
     // 如果无法获取环境信息，默认返回 true
-    return true;
+    return true
   }
 }

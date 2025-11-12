@@ -9,6 +9,7 @@ LightSync 是一个基于 Tauri + React + TypeScript 的轻量级 WebDAV 文件�
 ## 开发命令
 
 ### 开发环境
+
 ```bash
 # 启动开发服务器（前端 + Tauri 应用）- 主要开发命令
 npm run tauri:dev
@@ -18,6 +19,7 @@ npm run dev
 ```
 
 ### 构建和类型检查
+
 ```bash
 # 完整构建流程（TypeScript 编译 + Vite 构建）
 npm run build
@@ -31,6 +33,7 @@ npm run preview
 ## 技术栈
 
 ### 前端
+
 - **React 19** - 函数式组件和 hooks
 - **TypeScript 5.8** - 严格模式类型检查
 - **Vite 7** - 构建工具和开发服务器
@@ -40,6 +43,7 @@ npm run preview
 - **Framer Motion** - 动画库
 
 ### 后端（Tauri/Rust）
+
 - **Tauri 2.x** - 轻量级桌面应用框架
 - **tokio** - 异步运行时（带完整特性）
 - **serde/serde_json** - JSON 序列化，使用驼峰命名（`#[serde(rename_all = "camelCase")]`）
@@ -48,6 +52,7 @@ npm run preview
 - **chrono** - 时间处理
 
 ### Tauri 插件
+
 - **tauri-plugin-sql** - SQLite 数据库支持
 - **tauri-plugin-store** - 持久化键值存储（用于配置管理）
 - **tauri-plugin-fs** - 文件系统访问
@@ -129,14 +134,14 @@ npm run preview
 前端通过 `@tauri-apps/api` 调用 Rust 命令：
 
 ```typescript
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api/core'
 
 // 调用返回 Result<T> 的命令
-const config = await invoke<AppConfig>('get_config');
+const config = await invoke<AppConfig>('get_config')
 
 // 错误处理
 try {
-  await invoke('update_config', { config: newConfig });
+  await invoke('update_config', { config: newConfig })
 } catch (error) {
   // error 是序列化的 SyncError 字符串
 }
@@ -160,6 +165,7 @@ try {
 ## 开发规范
 
 ### TypeScript/React
+
 - 使用函数式组件和 hooks，避免类组件
 - 严格模式 TypeScript（`strict: true`）
 - 使用描述性变量名（如 `isLoading`, `hasError`）
@@ -167,6 +173,7 @@ try {
 - 支持亮色/暗色主题，使用 `dark:` 前缀
 
 ### Rust
+
 - 所有公共函数使用 `/// 文档注释`
 - 错误处理：使用 `Result<T>` 类型，返回 `SyncError`
 - 异步函数使用 `async fn` 和 `tokio` 运行时
@@ -174,6 +181,7 @@ try {
 - 命名：蛇形命名（snake_case）用于变量/函数，帕斯卡命名（PascalCase）用于类型
 
 ### 测试
+
 - Rust 单元测试位于每个模块的 `#[cfg(test)] mod tests`
 - 配置和数据库模块已有完整的序列化测试
 - 前端使用 ErrorBoundary 捕获运行时错误
