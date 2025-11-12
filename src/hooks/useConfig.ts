@@ -4,16 +4,16 @@
  * 提供 React Hook 接口来管理应用配置
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import {
-  initConfig,
-  getConfig,
-  updateConfig,
-  getConfigValue,
-  setConfigValue,
-  resetConfig,
-  watchConfig,
   batchUpdateConfig,
+  getConfig,
+  getConfigValue,
+  initConfig,
+  resetConfig,
+  setConfigValue,
+  updateConfig,
+  watchConfig,
 } from '../utils/store'
 import type {
   AppConfig,
@@ -297,9 +297,7 @@ export function useSyncFolders(): UseSyncFoldersReturn {
 
       const newConfig: AppConfig = {
         ...config,
-        syncFolders: config.syncFolders.map(folder =>
-          folder.id === id ? { ...folder, ...updates } : folder
-        ),
+        syncFolders: config.syncFolders.map(folder => (folder.id === id ? { ...folder, ...updates } : folder)),
       }
       await update(newConfig)
     },
@@ -368,9 +366,7 @@ export function useWebDavServers(): UseWebDavServersReturn {
 
       const newConfig: AppConfig = {
         ...config,
-        webdavServers: config.webdavServers.map(server =>
-          server.id === id ? { ...server, ...updates } : server
-        ),
+        webdavServers: config.webdavServers.map(server => (server.id === id ? { ...server, ...updates } : server)),
       }
       await update(newConfig)
     },

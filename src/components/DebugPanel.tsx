@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { Card, CardHeader, CardBody, Button, Switch, Divider, Chip } from '@nextui-org/react'
+import React, { useEffect, useState } from 'react'
+import { Button, Card, CardBody, CardHeader, Chip, Divider, Switch } from '@nextui-org/react'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { isDevelopmentMode } from '../utils/system'
@@ -162,9 +162,7 @@ export const DebugPanel: React.FC = () => {
           {isMonitoring && (
             <div className='grid grid-cols-3 gap-4'>
               <div className='text-center'>
-                <div className='text-2xl font-bold text-blue-500'>
-                  {performanceData.memoryUsage}MB
-                </div>
+                <div className='text-2xl font-bold text-blue-500'>{performanceData.memoryUsage}MB</div>
                 <div className='text-sm text-default-500'>内存使用</div>
               </div>
               <div className='text-center'>
@@ -172,9 +170,7 @@ export const DebugPanel: React.FC = () => {
                 <div className='text-sm text-default-500'>CPU使用</div>
               </div>
               <div className='text-center'>
-                <div className='text-2xl font-bold text-orange-500'>
-                  {performanceData.renderTime}ms
-                </div>
+                <div className='text-2xl font-bold text-orange-500'>{performanceData.renderTime}ms</div>
                 <div className='text-sm text-default-500'>渲染时间</div>
               </div>
             </div>
@@ -199,10 +195,7 @@ export const DebugPanel: React.FC = () => {
               ) : (
                 <div className='space-y-1'>
                   {logs.map((log, index) => (
-                    <div
-                      key={index}
-                      className='font-mono text-xs text-default-700 dark:text-default-300'
-                    >
+                    <div key={index} className='font-mono text-xs text-default-700 dark:text-default-300'>
                       {log}
                     </div>
                   ))}

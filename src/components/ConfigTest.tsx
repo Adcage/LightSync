@@ -4,15 +4,9 @@
  * 用于测试配置管理系统的各项功能
  */
 
-import { useState, useEffect } from 'react'
-import { Card, CardBody, CardHeader, Button, Input, Divider, Spinner } from '@nextui-org/react'
-import {
-  useConfig,
-  useLanguage,
-  useTheme,
-  useSyncFolders,
-  useWebDavServers,
-} from '../hooks/useConfig'
+import { useEffect, useState } from 'react'
+import { Button, Card, CardBody, CardHeader, Divider, Input, Spinner } from '@nextui-org/react'
+import { useConfig, useLanguage, useSyncFolders, useTheme, useWebDavServers } from '../hooks/useConfig'
 import type { SyncFolderConfig, WebDavServerConfig } from '../types/config'
 import { invoke } from '@tauri-apps/api/core'
 
@@ -267,11 +261,7 @@ export default function ConfigTest() {
                           <p className='font-semibold'>{folder.name}</p>
                           <p className='text-sm text-gray-600'>{folder.localPath}</p>
                         </div>
-                        <Button
-                          size='sm'
-                          color='danger'
-                          onPress={() => removeSyncFolder(folder.id)}
-                        >
+                        <Button size='sm' color='danger' onPress={() => removeSyncFolder(folder.id)}>
                           删除
                         </Button>
                       </CardBody>

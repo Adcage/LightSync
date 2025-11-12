@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Card, CardBody, CardHeader } from '@nextui-org/react'
 import { useTranslation } from 'react-i18next'
-import { Cloud, FolderOpen, Settings, Activity } from 'lucide-react'
+import { Activity, Cloud, FolderOpen, Settings } from 'lucide-react'
 import ConfigTest from '../components/ConfigTest'
 import DatabaseTest from '../components/DatabaseTest'
 import LanguageTest from '../components/LanguageTest'
@@ -27,14 +27,9 @@ const HomePage: React.FC = () => {
     <div className='mx-auto max-w-6xl space-y-8'>
       {/* 欢迎区域 */}
       <div className='py-8 text-center'>
-        <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>
-          {t('home.title', 'LightSync')}
-        </h1>
+        <h1 className='mb-4 text-4xl font-bold text-gray-900 dark:text-gray-100'>{t('home.title', 'LightSync')}</h1>
         <p className='mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-400'>
-          {t(
-            'home.subtitle',
-            '轻量级跨设备文件同步工具，基于 WebDAV 协议实现高效、安全、可定制的文件同步'
-          )}
+          {t('home.subtitle', '轻量级跨设备文件同步工具，基于 WebDAV 协议实现高效、安全、可定制的文件同步')}
         </p>
       </div>
 
@@ -43,9 +38,7 @@ const HomePage: React.FC = () => {
         <Card className='cursor-pointer transition-shadow hover:shadow-lg'>
           <CardBody className='p-6 text-center'>
             <FolderOpen className='mx-auto mb-4 h-12 w-12 text-blue-500' />
-            <h3 className='mb-2 font-semibold'>
-              {t('home.quickActions.syncFolders', '同步文件夹')}
-            </h3>
+            <h3 className='mb-2 font-semibold'>{t('home.quickActions.syncFolders', '同步文件夹')}</h3>
             <p className='text-sm text-gray-600 dark:text-gray-400'>
               {t('home.quickActions.syncFoldersDesc', '配置和管理同步文件夹')}
             </p>
@@ -55,9 +48,7 @@ const HomePage: React.FC = () => {
         <Card className='cursor-pointer transition-shadow hover:shadow-lg'>
           <CardBody className='p-6 text-center'>
             <Cloud className='mx-auto mb-4 h-12 w-12 text-green-500' />
-            <h3 className='mb-2 font-semibold'>
-              {t('home.quickActions.webdavServers', 'WebDAV 服务器')}
-            </h3>
+            <h3 className='mb-2 font-semibold'>{t('home.quickActions.webdavServers', 'WebDAV 服务器')}</h3>
             <p className='text-sm text-gray-600 dark:text-gray-400'>
               {t('home.quickActions.webdavServersDesc', '配置云端服务器连接')}
             </p>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 
 export const TitleBar = () => {
@@ -87,9 +87,7 @@ export const TitleBar = () => {
         <div className='flex h-6 w-6 items-center justify-center rounded-lg bg-gradient-to-br from-cyan-400 via-blue-500 to-blue-600 text-sm font-bold text-white shadow-md'>
           L
         </div>
-        <span className='text-sm font-semibold tracking-wide text-gray-800 dark:text-gray-200'>
-          LightSync
-        </span>
+        <span className='text-sm font-semibold tracking-wide text-gray-800 dark:text-gray-200'>LightSync</span>
       </div>
 
       {/* 右侧：窗口控制按钮 - 非拖拽区域 */}

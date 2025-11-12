@@ -124,10 +124,7 @@ export async function upsertFileMetadata(metadata: FileMetadata): Promise<number
 export async function getFileMetadata(id: number): Promise<FileMetadata | null> {
   const database = await getDatabase()
 
-  const results = await database.select<FileMetadata[]>(
-    'SELECT * FROM file_metadata WHERE id = ?',
-    [id]
-  )
+  const results = await database.select<FileMetadata[]>('SELECT * FROM file_metadata WHERE id = ?', [id])
 
   return results.length > 0 ? results[0] : null
 }
@@ -138,19 +135,15 @@ export async function getFileMetadata(id: number): Promise<FileMetadata | null> 
 export async function getFileMetadataByFolder(syncFolderId: number): Promise<FileMetadata[]> {
   const database = await getDatabase()
 
-  return await database.select<FileMetadata[]>(
-    'SELECT * FROM file_metadata WHERE sync_folder_id = ? ORDER BY path',
-    [syncFolderId]
-  )
+  return await database.select<FileMetadata[]>('SELECT * FROM file_metadata WHERE sync_folder_id = ? ORDER BY path', [
+    syncFolderId,
+  ])
 }
 
 /**
  * 根据路径获取文件元数据
  */
-export async function getFileMetadataByPath(
-  syncFolderId: number,
-  path: string
-): Promise<FileMetadata | null> {
+export async function getFileMetadataByPath(syncFolderId: number, path: string): Promise<FileMetadata | null> {
   const database = await getDatabase()
 
   const results = await database.select<FileMetadata[]>(
@@ -255,10 +248,10 @@ export async function getSyncLogs(filter: QueryFilter = {}): Promise<SyncLog[]> 
 export async function createSyncSession(syncFolderId: number): Promise<number> {
   const database = await getDatabase()
 
-  const result = await database.execute(
-    'INSERT INTO sync_sessions (sync_folder_id, status) VALUES (?, ?)',
-    [syncFolderId, 'running']
-  )
+  const result = await database.execute('INSERT INTO sync_sessions (sync_folder_id, status) VALUES (?, ?)', [
+    syncFolderId,
+    'running',
+  ])
 
   return result.lastInsertId ?? 0
 }
@@ -301,10 +294,7 @@ export async function updateSyncSession(session: SyncSession): Promise<boolean> 
 /**
  * 获取同步会话列表
  */
-export async function getSyncSessions(
-  syncFolderId?: number,
-  limit: number = 10
-): Promise<SyncSession[]> {
+export async function getSyncSessions(syncFolderId?: number, limit: number = 10): Promise<SyncSession[]> {
   const database = await getDatabase()
 
   let query = 'SELECT * FROM sync_sessions'
@@ -342,17 +332,11 @@ export async function cleanupOldLogs(daysToKeep: number): Promise<number> {
 export async function getDatabaseStats(): Promise<DatabaseStats> {
   const database = await getDatabase()
 
-  const [filesResult] = await database.select<[{ total: number }]>(
-    'SELECT COUNT(*) as total FROM file_metadata'
-  )
+  const [filesResult] = await database.select<[{ total: number }]>('SELECT COUNT(*) as total FROM file_metadata')
 
-  const [logsResult] = await database.select<[{ total: number }]>(
-    'SELECT COUNT(*) as total FROM sync_logs'
-  )
+  const [logsResult] = await database.select<[{ total: number }]>('SELECT COUNT(*) as total FROM sync_logs')
 
-  const [sessionsResult] = await database.select<[{ total: number }]>(
-    'SELECT COUNT(*) as total FROM sync_sessions'
-  )
+  const [sessionsResult] = await database.select<[{ total: number }]>('SELECT COUNT(*) as total FROM sync_sessions')
 
   const [pendingResult] = await database.select<[{ total: number }]>(
     "SELECT COUNT(*) as total FROM file_metadata WHERE status = 'pending'"

@@ -5,19 +5,19 @@
  */
 
 import { useState } from 'react'
-import { Card, CardBody, CardHeader, Button, Divider, Code, Chip } from '@nextui-org/react'
+import { Button, Card, CardBody, CardHeader, Chip, Code, Divider } from '@nextui-org/react'
 import {
-  upsertFileMetadata,
-  getFileMetadataByFolder,
-  insertSyncLog,
-  getSyncLogs,
-  createSyncSession,
-  updateSyncSession,
-  getDatabaseStats,
   cleanupOldLogs,
-  type FileMetadata,
-  type SyncLog,
+  createSyncSession,
   type DatabaseStats,
+  type FileMetadata,
+  getDatabaseStats,
+  getFileMetadataByFolder,
+  getSyncLogs,
+  insertSyncLog,
+  type SyncLog,
+  updateSyncSession,
+  upsertFileMetadata,
 } from '../utils/database'
 
 export default function DatabaseTest() {
@@ -297,11 +297,7 @@ export default function DatabaseTest() {
                         <Chip
                           size='sm'
                           color={
-                            file.status === 'synced'
-                              ? 'success'
-                              : file.status === 'pending'
-                                ? 'warning'
-                                : 'danger'
+                            file.status === 'synced' ? 'success' : file.status === 'pending' ? 'warning' : 'danger'
                           }
                         >
                           {file.status}
@@ -329,13 +325,7 @@ export default function DatabaseTest() {
                         </div>
                         <Chip
                           size='sm'
-                          color={
-                            log.status === 'success'
-                              ? 'success'
-                              : log.status === 'pending'
-                                ? 'warning'
-                                : 'danger'
-                          }
+                          color={log.status === 'success' ? 'success' : log.status === 'pending' ? 'warning' : 'danger'}
                         >
                           {log.status}
                         </Chip>

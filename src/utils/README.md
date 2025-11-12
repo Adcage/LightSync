@@ -101,8 +101,8 @@ pub fn get_environment_mode() -> crate::Result<String> {
 ## 注意事项
 
 1. 环境模式检测基于编译时的 `debug_assertions`，这意味着：
-   - 使用 `cargo run` 或 `pnpm tauri dev` 启动时为开发环境
-   - 使用 `cargo build --release` 或 `pnpm tauri build` 构建时为生产环境
+    - 使用 `cargo run` 或 `pnpm tauri dev` 启动时为开发环境
+    - 使用 `cargo build --release` 或 `pnpm tauri build` 构建时为生产环境
 
 2. 所有函数都是异步的，需要使用 `await` 或 `.then()` 处理
 

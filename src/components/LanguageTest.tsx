@@ -1,6 +1,6 @@
 import React from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, CardHeader, CardBody, Divider } from '@nextui-org/react'
+import { Card, CardBody, CardHeader, Divider } from '@nextui-org/react'
 
 const LanguageTest: React.FC = () => {
   const { t, i18n } = useTranslation()

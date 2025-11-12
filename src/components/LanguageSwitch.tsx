@@ -1,6 +1,6 @@
 import React from 'react'
 import { useLanguage } from '../hooks/useLanguage'
-import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from '@nextui-org/react'
+import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownTrigger } from '@nextui-org/react'
 
 const LanguageSwitch: React.FC = () => {
   const { language, setLanguage } = useLanguage()
