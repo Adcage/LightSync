@@ -23,6 +23,7 @@
 ### 技术栈
 
 **前端技术**:
+
 - React 19.1.0 + TypeScript 5.8.3
 - NextUI 2.4.8 (UI 组件库)
 - TailwindCSS 3.4.18 (样式框架)
@@ -31,6 +32,7 @@
 - Vite 7.0.4 (构建工具)
 
 **后端技术**:
+
 - Rust (Edition 2021)
 - Tauri 2.0 (桌面应用框架)
 - tokio 1.x (异步运行时)
@@ -41,6 +43,7 @@
 - chrono 0.4 (日期时间处理)
 
 **Tauri 插件**:
+
 - tauri-plugin-store 2.x (配置存储)
 - tauri-plugin-sql 2.x (SQLite 数据库)
 - tauri-plugin-fs 2.4.4 (文件系统访问)
@@ -179,6 +182,7 @@ pnpm preview
 ```
 
 **注意事项**:
+
 - 开发服务器默认运行在 `http://localhost:1420`
 - HMR (热模块替换) 端口为 `1421`
 - 使用 `pnpm tauri:dev` 可同时启动前后端开发环境
@@ -216,6 +220,7 @@ cargo check
 **文件**: `src-tauri/src/config.rs`, `src/hooks/useConfig.ts`
 
 **功能特性**:
+
 - 统一的配置数据结构 (AppConfig)
 - 配置初始化和默认值设置
 - 配置 CRUD 操作 (增删改查)
@@ -224,34 +229,37 @@ cargo check
 - WebDAV 服务器配置管理
 
 **数据结构**:
+
 ```typescript
 interface AppConfig {
-  version: string;              // 应用版本
-  language: string;             // 语言设置 (zh-CN, en-US)
-  theme: string;                // 主题 (light, dark, system)
-  autoStart: boolean;           // 开机自启动
-  minimizeToTray: boolean;      // 最小化到托盘
-  syncFolders: SyncFolder[];    // 同步文件夹列表
-  webdavServers: WebDavServer[]; // WebDAV 服务器列表
+  version: string // 应用版本
+  language: string // 语言设置 (zh-CN, en-US)
+  theme: string // 主题 (light, dark, system)
+  autoStart: boolean // 开机自启动
+  minimizeToTray: boolean // 最小化到托盘
+  syncFolders: SyncFolder[] // 同步文件夹列表
+  webdavServers: WebDavServer[] // WebDAV 服务器列表
 }
 ```
 
 **可用 Hooks**:
+
 ```typescript
 // 获取完整配置
-const { config, loading, error } = useConfig();
+const { config, loading, error } = useConfig()
 
 // 获取单个配置值
-const { value, loading, error } = useConfigValue<string>('language');
+const { value, loading, error } = useConfigValue<string>('language')
 
 // 更新配置
-const { updateConfig, loading, error } = useConfigUpdate();
+const { updateConfig, loading, error } = useConfigUpdate()
 
 // 重置配置
-const { resetConfig, loading, error } = useConfigReset();
+const { resetConfig, loading, error } = useConfigReset()
 ```
 
 **Tauri 命令**:
+
 - `init_config()` - 初始化配置
 - `get_config()` - 获取完整配置
 - `update_config(config)` - 更新配置
@@ -267,6 +275,7 @@ const { resetConfig, loading, error } = useConfigReset();
 **数据表结构**:
 
 **file_metadata** - 文件元数据表
+
 ```sql
 - id: 主键
 - path: 文件路径
@@ -280,6 +289,7 @@ const { resetConfig, loading, error } = useConfigReset();
 ```
 
 **sync_logs** - 同步日志表
+
 ```sql
 - id: 主键
 - sync_folder_id: 所属同步文件夹
@@ -292,6 +302,7 @@ const { resetConfig, loading, error } = useConfigReset();
 ```
 
 **sync_sessions** - 同步会话表
+
 ```sql
 - id: 主键
 - sync_folder_id: 所属同步文件夹
@@ -303,22 +314,23 @@ const { resetConfig, loading, error } = useConfigReset();
 ```
 
 **数据库操作**:
+
 ```typescript
 // 文件元数据 CRUD
-await createFileMetadata(metadata);
-await getFileMetadata(id);
-await updateFileMetadata(id, metadata);
-await deleteFileMetadata(id);
-await listFileMetadata(syncFolderId);
+await createFileMetadata(metadata)
+await getFileMetadata(id)
+await updateFileMetadata(id, metadata)
+await deleteFileMetadata(id)
+await listFileMetadata(syncFolderId)
 
 // 同步日志
-await createSyncLog(log);
-await listSyncLogs(syncFolderId, limit);
+await createSyncLog(log)
+await listSyncLogs(syncFolderId, limit)
 
 // 同步会话
-await createSyncSession(session);
-await updateSyncSession(id, session);
-await getSyncSession(id);
+await createSyncSession(session)
+await updateSyncSession(id, session)
+await getSyncSession(id)
 ```
 
 ### 3. 错误处理系统 ✅
@@ -327,6 +339,7 @@ await getSyncSession(id);
 **文件**: `src-tauri/src/error.rs`
 
 **错误类型**:
+
 ```rust
 pub enum SyncError {
     ConfigError(String),      // 配置错误
@@ -340,6 +353,7 @@ pub enum SyncError {
 ```
 
 **特性**:
+
 - 统一的错误类型定义
 - 自动错误序列化为 JSON
 - 详细的错误信息和上下文
@@ -351,6 +365,7 @@ pub enum SyncError {
 **文件**: `src/components/TitleBar.tsx`
 
 **功能特性**:
+
 - 无边框窗口设计
 - 拖拽移动窗口
 - 最小化/最大化/关闭按钮
@@ -359,10 +374,11 @@ pub enum SyncError {
 - 优雅的悬停动画效果
 
 **配置**:
+
 ```json
 // tauri.conf.json
 {
-  "decorations": false,  // 禁用系统标题栏
+  "decorations": false, // 禁用系统标题栏
   "transparent": false,
   "resizable": true
 }
@@ -374,11 +390,13 @@ pub enum SyncError {
 **文件**: `src/components/ThemeSwitch.tsx`
 
 **支持主题**:
+
 - 浅色模式 (Light)
 - 深色模式 (Dark)
 - 跟随系统 (System)
 
 **实现方式**:
+
 - next-themes 主题管理
 - TailwindCSS dark: 类名
 - 自动持久化主题选择
@@ -438,6 +456,7 @@ pub enum SyncError {
 ### 代码风格
 
 **TypeScript/React**:
+
 - 使用函数式组件和 Hooks
 - 优先使用 TypeScript 类型推导
 - 组件使用 PascalCase 命名
@@ -445,6 +464,7 @@ pub enum SyncError {
 - 使用 ES6+ 语法
 
 **Rust**:
+
 - 遵循 Rust 官方代码风格
 - 使用 `cargo fmt` 格式化代码
 - 使用 `cargo clippy` 检查代码
@@ -466,6 +486,7 @@ chore: 构建/工具相关
 ```
 
 示例：
+
 ```
 feat: 实现配置文件监听功能
 fix: 修复数据库连接超时问题
@@ -512,6 +533,7 @@ release/*       # 发布分支
 
 **Q: Rust 编译失败，提示找不到依赖**  
 A: 尝试清理缓存并重新构建：
+
 ```bash
 cd src-tauri
 cargo clean
@@ -520,6 +542,7 @@ cargo build
 
 **Q: 前端开发服务器启动失败**  
 A: 检查端口 1420 是否被占用，或删除 `node_modules` 重新安装：
+
 ```bash
 rm -rf node_modules
 pnpm install
@@ -537,6 +560,7 @@ A: 使用 `reset_config()` 命令重置为默认配置
 
 **Q: 如何调试 Rust 后端代码？**  
 A: 在 `src-tauri/src/lib.rs` 中添加日志：
+
 ```rust
 println!("Debug: {:?}", variable);
 ```
@@ -550,23 +574,23 @@ A: 使用 SQLite 客户端连接到 `~/.local/share/com.lightsync/lightsync.db`
 
 ### 目标性能
 
-| 指标 | 目标值 | 当前状态 |
-|------|--------|----------|
-| 启动时间 | < 2秒 | 🟡 待测试 |
+| 指标            | 目标值 | 当前状态  |
+| --------------- | ------ | --------- |
+| 启动时间        | < 2秒  | 🟡 待测试 |
 | 内存占用 (空闲) | < 30MB | 🟡 待测试 |
 | 内存占用 (同步) | < 50MB | 🟡 待测试 |
-| CPU 使用 (空闲) | < 1% | 🟡 待测试 |
-| CPU 使用 (同步) | < 10% | 🟡 待测试 |
+| CPU 使用 (空闲) | < 1%   | 🟡 待测试 |
+| CPU 使用 (同步) | < 10%  | 🟡 待测试 |
 
 ### 容量限制
 
-| 项目 | 最大支持 |
-|------|----------|
-| WebDAV 服务器 | 10 个 |
-| 同步文件夹 | 100 个 |
-| 单文件夹文件数 | 10万 个 |
-| 单文件大小 | 10 GB |
-| 总同步数据量 | 1 TB |
+| 项目           | 最大支持 |
+| -------------- | -------- |
+| WebDAV 服务器  | 10 个    |
+| 同步文件夹     | 100 个   |
+| 单文件夹文件数 | 10万 个  |
+| 单文件大小     | 10 GB    |
+| 总同步数据量   | 1 TB     |
 
 ---
 
@@ -583,6 +607,7 @@ A: 使用 SQLite 客户端连接到 `~/.local/share/com.lightsync/lightsync.db`
 ### 报告问题
 
 在 GitHub Issues 中提交问题时，请包含：
+
 - 操作系统和版本
 - 应用版本
 - 详细的问题描述

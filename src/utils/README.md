@@ -13,27 +13,27 @@
 ### 1. 基础函数
 
 ```typescript
-import { 
-  getRuntimeEnvironment, 
-  getEnvironmentMode, 
-  isDevelopmentMode, 
-  isProductionMode 
-} from '../utils/system';
+import {
+  getRuntimeEnvironment,
+  getEnvironmentMode,
+  isDevelopmentMode,
+  isProductionMode,
+} from '../utils/system'
 
 // 获取完整的运行环境信息
-const envInfo = await getRuntimeEnvironment();
+const envInfo = await getRuntimeEnvironment()
 // 示例输出: "OS: windows, Arch: x86_64, App: 0.1.0"
 
 // 获取环境模式
-const mode = await getEnvironmentMode();
+const mode = await getEnvironmentMode()
 // 输出: "development" 或 "production"
 
 // 检查是否为开发环境
-const isDev = await isDevelopmentMode();
+const isDev = await isDevelopmentMode()
 // 输出: true 或 false
 
 // 检查是否为生产环境
-const isProd = await isProductionMode();
+const isProd = await isProductionMode()
 // 输出: true 或 false
 ```
 
@@ -85,7 +85,7 @@ pub fn get_environment_mode() -> crate::Result<String> {
     } else {
         "production".to_string()
     };
-    
+
     Ok(mode)
 }
 ```
@@ -101,8 +101,8 @@ pub fn get_environment_mode() -> crate::Result<String> {
 ## 注意事项
 
 1. 环境模式检测基于编译时的 `debug_assertions`，这意味着：
-   - 使用 `cargo run` 或 `pnpm tauri dev` 启动时为开发环境
-   - 使用 `cargo build --release` 或 `pnpm tauri build` 构建时为生产环境
+    - 使用 `cargo run` 或 `pnpm tauri dev` 启动时为开发环境
+    - 使用 `cargo build --release` 或 `pnpm tauri build` 构建时为生产环境
 
 2. 所有函数都是异步的，需要使用 `await` 或 `.then()` 处理
 

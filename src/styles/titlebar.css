@@ -2,35 +2,132 @@
 
 /* 确保拖拽区域在整个标题栏上工作 */
 [data-tauri-drag-region] {
-  -webkit-app-region: drag;
-  app-region: drag;
+    -webkit-app-region: drag;
+    app-region: drag;
 }
 
 /* 按钮不应该是拖拽区域 */
-[data-tauri-drag-region] button {
-  -webkit-app-region: no-drag;
-  app-region: no-drag;
+[data-tauri-drag-region='false'] {
+    -webkit-app-region: no-drag;
+    app-region: no-drag;
+}
+
+/* WindowControl 组件样式 */
+.window-control {
+    display: flex;
+    height: 100%;
+}
+
+/* NextUI Button 组件自定义样式 */
+.window-control .nextui-button {
+    border-radius: 0 !important;
+    min-width: 35px !important;
+    width: 35px !important;
+    height: 35px !important;
+    transition: all 0.2s ease !important;
+}
+
+/* 关闭按钮特殊样式 */
+.window-control .close-button:hover {
+    background-color: #e81123 !important;
+    color: white !important;
+}
+
+.window-control .close-button:active {
+    background-color: #c50f1f !important;
+}
+
+/* macOS 特定样式优化 */
+@media (platform: darwin) {
+    /* macOS 上的窗口控制按钮样式 */
+    .window-control .nextui-button {
+        background-color: transparent !important;
+    }
+    
+    .window-control .nextui-button:hover {
+        background-color: rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .window-control .close-button:hover {
+        background-color: #ff5f57 !important;
+    }
+    
+    .window-control .close-button:active {
+        background-color: #e0433e !important;
+    }
+    
+    /* 深色模式下的悬停效果 */
+    .dark .window-control .nextui-button:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
 }
 
 /* Windows 特定样式优化 */
 @media (platform: windows) {
-  .titlebar-button {
-    width: 46px;
-  }
+    .window-control .nextui-button {
+        background-color: transparent !important;
+    }
+    
+    .window-control .nextui-button:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .dark .window-control .nextui-button:hover {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
 }
 
-/* 平滑过渡效果 */
-.titlebar-button {
-  transition: background-color 0.2s ease, color 0.2s ease;
+/* Linux 特定样式优化 */
+@media (platform: linux) {
+    .window-control .nextui-button {
+        background-color: transparent !important;
+    }
+    
+    .window-control .nextui-button:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+    }
+    
+    .dark .window-control .nextui-button:hover {
+        background-color: rgba(255, 255, 255, 0.05) !important;
+    }
 }
 
-/* 关闭按钮悬停效果 */
-.titlebar-close-button:hover {
-  background-color: #e81123;
-  color: white;
+/* 通用平滑过渡效果 */
+.window-control .nextui-button {
+    transition: background-color 0.2s ease, color 0.2s ease !important;
+    cursor: pointer !important;
+    outline: none !important;
 }
 
-.titlebar-close-button:active {
-  background-color: #c50f1f;
+/* 防止文本选择 */
+.titlebar-container {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
+/* 拖拽时的光标样式 */
+.cursor-grab {
+    cursor: -webkit-grab;
+    cursor: grab;
+}
+
+.cursor-grabbing {
+    cursor: -webkit-grabbing;
+    cursor: grabbing;
+}
+
+/* 确保按钮在拖拽时不会触发点击事件 */
+.window-control .nextui-button {
+    pointer-events: auto !important;
+}
+
+/* 防止按钮区域的双击行为 */
+.window-control .nextui-button {
+    -webkit-user-drag: none;
+    -khtml-user-drag: none;
+    -moz-user-drag: none;
+    -o-user-drag: none;
+    user-drag: none;
+}

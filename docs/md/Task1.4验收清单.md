@@ -8,6 +8,7 @@
 ## 📋 任务概述
 
 实现 SQLite 数据库初始化，包括：
+
 - 数据库插件注册
 - 数据库表结构设计
 - 数据库操作封装
@@ -61,6 +62,7 @@ chrono = "0.4"
 **表结构设计**:
 
 #### **file_metadata 表** - 文件元数据
+
 ```sql
 - id: 主键
 - path: 文件路径（相对路径）
@@ -76,11 +78,13 @@ chrono = "0.4"
 ```
 
 **特性**:
+
 - ✅ 唯一约束: (sync_folder_id, path)
 - ✅ 索引: sync_folder_id, status, path, modified_at
 - ✅ 自动时间戳: created_at, updated_at
 
 #### **sync_logs 表** - 同步日志
+
 ```sql
 - id: 主键
 - sync_folder_id: 所属同步文件夹ID
@@ -94,10 +98,12 @@ chrono = "0.4"
 ```
 
 **特性**:
+
 - ✅ 索引: sync_folder_id, status, created_at, action
 - ✅ 自动时间戳: created_at
 
 #### **sync_sessions 表** - 同步会话
+
 ```sql
 - id: 主键
 - sync_folder_id: 所属同步文件夹ID
@@ -114,6 +120,7 @@ chrono = "0.4"
 ```
 
 **特性**:
+
 - ✅ 索引: sync_folder_id, started_at, status
 - ✅ 自动时间戳: started_at
 
@@ -124,6 +131,7 @@ chrono = "0.4"
 **文件**: `src-tauri/src/database.rs`
 
 **内容**:
+
 - ✅ 定义数据结构体：FileMetadata, SyncLog, SyncSession
 - ✅ 定义查询过滤器：QueryFilter
 - ✅ 定义统计信息：DatabaseStats
@@ -131,6 +139,7 @@ chrono = "0.4"
 - ✅ 添加单元测试
 
 **数据结构**:
+
 ```rust
 pub struct FileMetadata {
     pub id: Option<i64>,
@@ -156,6 +165,7 @@ pub struct FileMetadata {
 **实现的操作**:
 
 #### 文件元数据操作
+
 - ✅ `upsertFileMetadata()` - 插入或更新文件元数据
 - ✅ `getFileMetadata()` - 根据 ID 获取文件元数据
 - ✅ `getFileMetadataByFolder()` - 根据文件夹 ID 获取所有元数据
@@ -164,19 +174,23 @@ pub struct FileMetadata {
 - ✅ `batchUpdateStatus()` - 批量更新状态
 
 #### 同步日志操作
+
 - ✅ `insertSyncLog()` - 插入同步日志
 - ✅ `getSyncLogs()` - 查询同步日志（支持过滤）
 
 #### 同步会话操作
+
 - ✅ `createSyncSession()` - 创建同步会话
 - ✅ `updateSyncSession()` - 更新同步会话
 - ✅ `getSyncSessions()` - 查询同步会话
 
 #### 工具函数
+
 - ✅ `cleanupOldLogs()` - 清理旧日志
 - ✅ `getDatabaseStats()` - 获取数据库统计信息
 
 **特性**:
+
 - ✅ 单例模式管理数据库连接
 - ✅ TypeScript 类型安全
 - ✅ 完整的错误处理
@@ -186,14 +200,16 @@ pub struct FileMetadata {
 
 ### 5. 创建 Tauri 命令暴露数据库操作 ✅
 
-**实现方式**: 
+**实现方式**:
 
 采用 **前端直接操作** 方式，而不是通过后端 Rust 命令：
+
 - ✅ 前端使用 `@tauri-apps/plugin-sql` 直接执行 SQL
 - ✅ 后端只负责注册插件和配置迁移
 - ✅ 更灵活、更高效的架构设计
 
 **优势**:
+
 - 减少后端代码量
 - 提高前端灵活性
 - 降低前后端通信开销
@@ -206,6 +222,7 @@ pub struct FileMetadata {
 **文件**: `src/components/DatabaseTest.tsx`
 
 **测试组件功能**:
+
 - ✅ 插入文件元数据测试
 - ✅ 查询文件元数据测试
 - ✅ 插入同步日志测试
@@ -216,6 +233,7 @@ pub struct FileMetadata {
 - ✅ 一键运行所有测试
 
 **UI 特性**:
+
 - ✅ NextUI 风格界面
 - ✅ 实时显示测试结果
 - ✅ 数据库统计信息可视化
@@ -229,12 +247,14 @@ pub struct FileMetadata {
 ## 📂 文件清单
 
 ### 后端文件
+
 - ✅ `src-tauri/Cargo.toml` - 添加依赖
 - ✅ `src-tauri/src/lib.rs` - 注册插件
 - ✅ `src-tauri/src/database.rs` - 数据结构定义
 - ✅ `src-tauri/migrations/001_initial.sql` - 数据库迁移
 
 ### 前端文件
+
 - ✅ `package.json` - 添加 SQL 插件依赖
 - ✅ `src/utils/database.ts` - 数据库操作工具
 - ✅ `src/components/DatabaseTest.tsx` - 测试组件
@@ -245,6 +265,7 @@ pub struct FileMetadata {
 ## 🎯 验收标准检查
 
 ### 功能验收
+
 - [x] 项目可以成功编译（无 linter 错误）
 - [x] 数据库插件正确注册
 - [x] 数据库迁移文件正确加载
@@ -257,6 +278,7 @@ pub struct FileMetadata {
 - [x] 所有测试功能可执行
 
 ### 代码质量
+
 - [x] 代码符合 TypeScript 规范
 - [x] 代码符合 Rust 规范
 - [x] 错误处理完善
@@ -265,6 +287,7 @@ pub struct FileMetadata {
 - [x] 无编译警告
 
 ### 数据库设计
+
 - [x] 表结构设计合理
 - [x] 索引设计优化
 - [x] 约束设置正确
@@ -332,8 +355,9 @@ pub struct FileMetadata {
 ## 🔄 API 使用示例
 
 ### 插入文件元数据
+
 ```typescript
-import { upsertFileMetadata } from '../utils/database';
+import { upsertFileMetadata } from '../utils/database'
 
 const metadata = {
   path: '/documents/file.txt',
@@ -343,22 +367,24 @@ const metadata = {
   sync_folder_id: 1,
   is_directory: false,
   status: 'pending',
-};
+}
 
-const id = await upsertFileMetadata(metadata);
+const id = await upsertFileMetadata(metadata)
 ```
 
 ### 查询文件元数据
-```typescript
-import { getFileMetadataByFolder } from '../utils/database';
 
-const files = await getFileMetadataByFolder(1);
-console.log(`找到 ${files.length} 个文件`);
+```typescript
+import { getFileMetadataByFolder } from '../utils/database'
+
+const files = await getFileMetadataByFolder(1)
+console.log(`找到 ${files.length} 个文件`)
 ```
 
 ### 插入同步日志
+
 ```typescript
-import { insertSyncLog } from '../utils/database';
+import { insertSyncLog } from '../utils/database'
 
 const log = {
   sync_folder_id: 1,
@@ -367,19 +393,20 @@ const log = {
   status: 'success',
   file_size: 1024,
   duration_ms: 500,
-};
+}
 
-await insertSyncLog(log);
+await insertSyncLog(log)
 ```
 
 ### 获取数据库统计
-```typescript
-import { getDatabaseStats } from '../utils/database';
 
-const stats = await getDatabaseStats();
-console.log(`总文件数: ${stats.total_files}`);
-console.log(`已同步: ${stats.synced_files}`);
-console.log(`待同步: ${stats.pending_files}`);
+```typescript
+import { getDatabaseStats } from '../utils/database'
+
+const stats = await getDatabaseStats()
+console.log(`总文件数: ${stats.total_files}`)
+console.log(`已同步: ${stats.synced_files}`)
+console.log(`待同步: ${stats.pending_files}`)
 ```
 
 ---
@@ -452,4 +479,3 @@ console.log(`待同步: ${stats.pending_files}`);
 **✅ Task 1.4 验收通过！所有功能正常工作，代码质量优秀！**
 
 🎉 **下一步**: 开始 Task 1.5 国际化系统搭建
-
