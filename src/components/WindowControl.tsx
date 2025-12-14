@@ -1,6 +1,6 @@
 import { VscChromeClose, VscChromeMinimize, VscChromeMaximize, VscChromeRestore } from 'react-icons/vsc';
-import React, { useEffect, useState } from 'react';
-import { appWindow, type } from '@tauri-apps/api/window';
+import { useEffect, useState } from 'react';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
 import { Button } from '@nextui-org/react';
 
@@ -9,11 +9,15 @@ export default function WindowControl() {
     const [osType, setOsType] = useState<string>('');
 
     useEffect(() => {
+        const appWindow = getCurrentWindow();
+        
         // 获取操作系统类型
         const getOsType = async () => {
             try {
-                const os = await type();
-                setOsType(os);
+                // 使用 Tauri 命令获取环境信息
+                const { invoke } = await import('@tauri-apps/api/core');
+                const os = await invoke('get_environment_mode');
+                setOsType(os as string);
             } catch (error) {
                 console.error('获取操作系统类型失败:', error);
                 setOsType('unknown');
@@ -35,6 +39,8 @@ export default function WindowControl() {
             unlisten.then(fn => fn());
         };
     }, []);
+
+    const appWindow = getCurrentWindow();
 
     return (
         <div className="window-control flex h-full">
