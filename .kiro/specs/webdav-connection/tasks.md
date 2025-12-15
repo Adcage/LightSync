@@ -1,7 +1,7 @@
 # Implementation Plan
 
 - [ ] 1. 数据库迁移和数据模型
-  - [ ] 1.1 创建数据库迁移文件
+  - [x] 1.1 创建数据库迁移文件
     - 创建 `src-tauri/migrations/002_webdav_servers.sql`
     - 定义 `webdav_servers` 表结构
     - 添加必要的索引

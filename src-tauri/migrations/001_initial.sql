@@ -2,150 +2,88 @@
 -- Version: 1.0
 -- Description: 创建文件元数据表和同步日志表
 
--- 文件元数据表
--- 存储所有被同步的文件和文件夹的元数据信息
-CREATE TABLE IF NOT EXISTS file_metadata (
-    -- 主键ID
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
-    -- 文件路径（相对于同步文件夹的路径）
-    path TEXT NOT NULL,
-    
-    -- 文件内容哈希值（用于检测文件变更）
-    hash TEXT,
-    
-    -- 文件大小（字节）
-    size INTEGER NOT NULL DEFAULT 0,
-    
-    -- 文件最后修改时间（Unix 时间戳，秒）
-    modified_at INTEGER NOT NULL,
-    
-    -- 最后同步时间（Unix 时间戳，秒）
-    synced_at INTEGER,
-    
-    -- 所属同步文件夹ID（外键，关联配置中的 sync_folder）
-    sync_folder_id INTEGER NOT NULL,
-    
-    -- 是否为目录（0: 文件, 1: 目录）
-    is_directory INTEGER NOT NULL DEFAULT 0,
-    
-    -- 同步状态（synced: 已同步, pending: 待同步, conflict: 冲突, error: 错误）
-    status TEXT NOT NULL DEFAULT 'pending',
-    
-    -- 记录创建时间（Unix 时间戳，秒）
-    created_at INTEGER NOT NULL DEFAULT (unixepoch()),
-    
-    -- 记录更新时间（Unix 时间戳，秒）
-    updated_at INTEGER NOT NULL DEFAULT (unixepoch()),
-    
-    -- 唯一约束：每个同步文件夹中的路径必须唯一
-    UNIQUE(sync_folder_id, path)
-);
-
--- 为常用查询创建索引
-CREATE INDEX IF NOT EXISTS idx_file_metadata_sync_folder 
-    ON file_metadata(sync_folder_id);
-
-CREATE INDEX IF NOT EXISTS idx_file_metadata_status 
-    ON file_metadata(status);
-
-CREATE INDEX IF NOT EXISTS idx_file_metadata_path 
-    ON file_metadata(path);
-
-CREATE INDEX IF NOT EXISTS idx_file_metadata_modified_at 
-    ON file_metadata(modified_at);
+DROP TABLE IF EXISTS file_metadata CASCADE;
+CREATE TABLE file_metadata (
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '文件元数据ID',
+    path              VARCHAR(512) NOT NULL COMMENT '文件路径（相对于同步文件夹的路径）',
+    hash              VARCHAR(64) COMMENT '文件内容哈希值（用于检测文件变更）',
+    size              BIGINT NOT NULL DEFAULT 0 COMMENT '文件大小（字节）',
+    modified_at       BIGINT NOT NULL COMMENT '文件最后修改时间（Unix 时间戳，秒）',
+    synced_at         BIGINT COMMENT '最后同步时间（Unix 时间戳，秒）',
+    sync_folder_id    BIGINT NOT NULL COMMENT '所属同步文件夹ID（外键，关联配置中的 sync_folder）',
+    is_directory      TINYINT NOT NULL DEFAULT 0 COMMENT '是否为目录（0: 文件, 1: 目录）',
+    status            VARCHAR(32) NOT NULL DEFAULT 'pending' COMMENT '同步状态（synced: 已同步, pending: 待同步, conflict: 冲突, error: 错误）',
+    created_at        DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
+    updated_at        DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录更新时间',
+    is_delete         TINYINT DEFAULT 0 NOT NULL COMMENT '是否删除',
+    UNIQUE KEY uk_sync_folder_path (sync_folder_id, path),
+    INDEX idx_file_metadata_sync_folder (sync_folder_id),
+    INDEX idx_file_metadata_status (status),
+    INDEX idx_file_metadata_path (path),
+    INDEX idx_file_metadata_modified_at (modified_at)
+) COMMENT '文件元数据表';
 
 -- 同步日志表
 -- 记录所有同步操作的历史记录
-CREATE TABLE IF NOT EXISTS sync_logs (
-    -- 主键ID
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
-    -- 所属同步文件夹ID
-    sync_folder_id INTEGER NOT NULL,
-    
-    -- 文件路径（相对于同步文件夹的路径）
-    file_path TEXT NOT NULL,
-    
-    -- 操作类型（upload: 上传, download: 下载, delete: 删除, conflict: 冲突处理）
-    action TEXT NOT NULL,
-    
-    -- 操作状态（success: 成功, failed: 失败, pending: 待处理）
-    status TEXT NOT NULL DEFAULT 'pending',
-    
-    -- 错误信息（仅当 status 为 failed 时记录）
-    error_message TEXT,
-    
-    -- 文件大小（字节）
-    file_size INTEGER,
-    
-    -- 操作耗时（毫秒）
-    duration_ms INTEGER,
-    
-    -- 日志创建时间（Unix 时间戳，秒）
-    created_at INTEGER NOT NULL DEFAULT (unixepoch())
-);
-
--- 为日志查询创建索引
-CREATE INDEX IF NOT EXISTS idx_sync_logs_sync_folder 
-    ON sync_logs(sync_folder_id);
-
-CREATE INDEX IF NOT EXISTS idx_sync_logs_status 
-    ON sync_logs(status);
-
-CREATE INDEX IF NOT EXISTS idx_sync_logs_created_at 
-    ON sync_logs(created_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_sync_logs_action 
-    ON sync_logs(action);
+DROP TABLE IF EXISTS sync_logs CASCADE;
+CREATE TABLE sync_logs (
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '日志ID',
+    sync_folder_id    BIGINT NOT NULL COMMENT '所属同步文件夹ID',
+    file_path         VARCHAR(512) NOT NULL COMMENT '文件路径（相对于同步文件夹的路径）',
+    action            VARCHAR(32) NOT NULL COMMENT '操作类型（upload: 上传, download: 下载, delete: 删除, conflict: 冲突处理）',
+    status            VARCHAR(32) NOT NULL DEFAULT 'pending' COMMENT '操作状态（success: 成功, failed: 失败, pending: 待处理）',
+    error_message     TEXT COMMENT '错误信息（仅当 status 为 failed 时记录）',
+    file_size         BIGINT COMMENT '文件大小（字节）',
+    duration_ms       BIGINT COMMENT '操作耗时（毫秒）',
+    created_at        DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '日志创建时间',
+    is_delete         TINYINT DEFAULT 0 NOT NULL COMMENT '是否删除',
+    INDEX idx_sync_logs_sync_folder (sync_folder_id),
+    INDEX idx_sync_logs_status (status),
+    INDEX idx_sync_logs_created_at (created_at DESC),
+    INDEX idx_sync_logs_action (action)
+) COMMENT '同步日志表';
 
 -- 同步会话表
 -- 记录每次完整的同步会话信息
-CREATE TABLE IF NOT EXISTS sync_sessions (
-    -- 主键ID
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    
-    -- 所属同步文件夹ID
-    sync_folder_id INTEGER NOT NULL,
-    
-    -- 会话状态（running: 运行中, completed: 已完成, failed: 失败, cancelled: 已取消）
-    status TEXT NOT NULL DEFAULT 'running',
-    
-    -- 开始时间（Unix 时间戳，秒）
-    started_at INTEGER NOT NULL DEFAULT (unixepoch()),
-    
-    -- 结束时间（Unix 时间戳，秒）
-    completed_at INTEGER,
-    
-    -- 上传文件数
-    files_uploaded INTEGER NOT NULL DEFAULT 0,
-    
-    -- 下载文件数
-    files_downloaded INTEGER NOT NULL DEFAULT 0,
-    
-    -- 删除文件数
-    files_deleted INTEGER NOT NULL DEFAULT 0,
-    
-    -- 冲突文件数
-    files_conflict INTEGER NOT NULL DEFAULT 0,
-    
-    -- 错误数
-    errors_count INTEGER NOT NULL DEFAULT 0,
-    
-    -- 总传输字节数
-    total_bytes INTEGER NOT NULL DEFAULT 0,
-    
-    -- 错误信息
-    error_message TEXT
-);
+DROP TABLE IF EXISTS sync_sessions CASCADE;
+CREATE TABLE sync_sessions (
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '会话ID',
+    sync_folder_id    BIGINT NOT NULL COMMENT '所属同步文件夹ID',
+    status            VARCHAR(32) NOT NULL DEFAULT 'running' COMMENT '会话状态（running: 运行中, completed: 已完成, failed: 失败, cancelled: 已取消）',
+    started_at        DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '开始时间',
+    completed_at      DATETIME COMMENT '结束时间',
+    files_uploaded    BIGINT NOT NULL DEFAULT 0 COMMENT '上传文件数',
+    files_downloaded  BIGINT NOT NULL DEFAULT 0 COMMENT '下载文件数',
+    files_deleted     BIGINT NOT NULL DEFAULT 0 COMMENT '删除文件数',
+    files_conflict    BIGINT NOT NULL DEFAULT 0 COMMENT '冲突文件数',
+    errors_count      BIGINT NOT NULL DEFAULT 0 COMMENT '错误数',
+    total_bytes       BIGINT NOT NULL DEFAULT 0 COMMENT '总传输字节数',
+    error_message     TEXT COMMENT '错误信息',
+    is_delete         TINYINT DEFAULT 0 NOT NULL COMMENT '是否删除',
+    INDEX idx_sync_sessions_sync_folder (sync_folder_id),
+    INDEX idx_sync_sessions_started_at (started_at DESC),
+    INDEX idx_sync_sessions_status (status)
+) COMMENT '同步会话表';
 
--- 为会话查询创建索引
-CREATE INDEX IF NOT EXISTS idx_sync_sessions_sync_folder 
-    ON sync_sessions(sync_folder_id);
-
-CREATE INDEX IF NOT EXISTS idx_sync_sessions_started_at 
-    ON sync_sessions(started_at DESC);
-
-CREATE INDEX IF NOT EXISTS idx_sync_sessions_status 
-    ON sync_sessions(status);
+-- WebDAV 服务器配置表
+-- 存储所有用户配置的 WebDAV 服务器信息
+DROP TABLE IF EXISTS webdav_servers CASCADE;
+CREATE TABLE webdav_servers (
+    id                BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'WebDAV 服务器ID',
+    name              VARCHAR(255) NOT NULL COMMENT '服务器名称',
+    url               VARCHAR(512) NOT NULL COMMENT 'WebDAV 服务器 URL',
+    username          VARCHAR(255) NOT NULL COMMENT '用户名',
+    use_https         TINYINT NOT NULL DEFAULT 1 COMMENT '是否使用 HTTPS (0: HTTP, 1: HTTPS)',
+    timeout           INT NOT NULL DEFAULT 30 COMMENT '连接超时时间（秒）',
+    last_test_at      DATETIME COMMENT '最后连接测试时间',
+    last_test_status  VARCHAR(32) DEFAULT 'unknown' COMMENT '最后连接测试状态（success, failed, unknown）',
+    last_test_error   TEXT COMMENT '最后连接测试错误信息',
+    server_type       VARCHAR(32) DEFAULT 'generic' COMMENT '服务器类型（自动检测，如 nextcloud, owncloud, generic）',
+    enabled           TINYINT NOT NULL DEFAULT 1 COMMENT '是否启用（0: 禁用, 1: 启用）',
+    created_at        DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '记录创建时间',
+    updated_at        DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '记录更新时间',
+    is_delete         TINYINT DEFAULT 0 NOT NULL COMMENT '是否删除',
+    INDEX idx_webdav_servers_enabled (enabled),
+    INDEX idx_webdav_servers_last_test_status (last_test_status)
+) COMMENT 'WebDAV 服务器配置表';
 
