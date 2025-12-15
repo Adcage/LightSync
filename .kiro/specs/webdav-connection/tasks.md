@@ -7,19 +7,21 @@
     - 添加必要的索引
     - _Requirements: 1.3, 1.4_
 
-  - [ ] 1.2 在 lib.rs 中注册数据库迁移
+  - [x] 1.2 在 lib.rs 中注册数据库迁移
     - 添加 migration version 2
     - 配置迁移文件路径
     - _Requirements: 1.3_
 
-  - [ ] 1.3 创建 WebDavServerConfig 数据结构
+  - [x] 1.3 创建 WebDavServerConfig 数据结构
     - 在 `src-tauri/src/database.rs` 中定义结构体
     - 实现序列化/反序列化
     - 添加字段验证
     - _Requirements: 1.1, 1.3_
 
   - [ ] 1.4 实现数据库 CRUD 操作
-    - 创建 `src-tauri/src/webdav_db.rs` 模块
+    - 创建 `src-tauri/src/webdav/` 模块文件夹
+    - 创建 `src-tauri/src/webdav/mod.rs` 模块导出文件
+    - 创建 `src-tauri/src/webdav/db.rs` 数据库操作模块
     - 实现 insert_webdav_server
     - 实现 get_webdav_servers (支持 enabled 筛选)
     - 实现 get_webdav_server_by_id
@@ -41,7 +43,7 @@
     - _Requirements: 1.2_
 
   - [ ] 2.2 创建 KeyringManager 模块
-    - 创建 `src-tauri/src/keyring_manager.rs`
+    - 创建 `src-tauri/src/webdav/keyring.rs`
     - 实现 save_password 函数
     - 实现 get_password 函数
     - 实现 delete_password 函数
@@ -64,7 +66,7 @@
     - _Requirements: 6.1, 6.2, 6.3_
 
   - [ ] 3.2 创建 WebDavClient 结构体
-    - 创建 `src-tauri/src/webdav.rs`
+    - 创建 `src-tauri/src/webdav/client.rs`
     - 定义 WebDavClient 结构体
     - 实现 new 构造函数
     - 配置 HTTP 客户端(超时、认证)

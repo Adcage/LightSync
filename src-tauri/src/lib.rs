@@ -51,6 +51,12 @@ pub fn run() {
                             sql: include_str!("../migrations/001_initial.sql"),
                             kind: tauri_plugin_sql::MigrationKind::Up,
                         },
+                        tauri_plugin_sql::Migration {
+                            version: 2,
+                            description: "add webdav_servers table",
+                            sql: include_str!("../migrations/002_webdav_servers.sql"),
+                            kind: tauri_plugin_sql::MigrationKind::Up,
+                        },
                     ],
                 )
                 .build(),

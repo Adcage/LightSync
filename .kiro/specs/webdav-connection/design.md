@@ -1124,8 +1124,11 @@ mockito = "1.0"
 
 ```
 src-tauri/src/
-├── webdav.rs           # WebDAV 客户端实现
-├── keyring_manager.rs  # Keyring 管理器
+├── webdav/
+│   ├── mod.rs          # WebDAV 模块导出
+│   ├── db.rs           # 数据库 CRUD 操作
+│   ├── client.rs       # WebDAV 客户端实现
+│   └── keyring.rs      # Keyring 密码管理器
 └── commands/
     └── webdav.rs       # WebDAV 相关 Tauri 命令
 
@@ -1138,6 +1141,15 @@ src/
 │   └── ConnectionTestDialog.tsx  # 连接测试对话框
 └── utils/
     └── webdav.ts       # WebDAV 相关工具函数
+
+**模块化组织说明**:
+
+后端采用模块化结构，将 WebDAV 相关的所有功能聚合在 `webdav/` 模块下：
+- `webdav/mod.rs`: 统一导出模块的公共接口
+- `webdav/db.rs`: 数据库 CRUD 操作，与 SQLite 交互
+- `webdav/client.rs`: WebDAV 协议客户端，处理 HTTP 通信
+- `webdav/keyring.rs`: 系统密钥环集成，安全存储密码
+- `commands/webdav.rs`: Tauri 命令层，连接前端和后端逻辑
 ```
 
 ## Future Enhancements
