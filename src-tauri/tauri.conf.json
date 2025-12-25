@@ -26,8 +26,6 @@
         "closable": true,
         "center": true,
         "fullscreen": false,
-        "hiddenTitle": false,
-        "titleBarStyle": "Overlay",
         "skipTaskbar": false,
         "theme": "Light"
       }
