@@ -1,4 +1,6 @@
 import React, { Component, ReactNode } from 'react'
+import { Card, CardHeader, CardBody, Button, Code } from '@nextui-org/react'
+import { AlertCircle } from 'lucide-react'
 
 interface Props {
   children: ReactNode
@@ -26,20 +28,22 @@ export class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className='flex h-screen items-center justify-center bg-gray-100 dark:bg-zinc-900'>
-          <div className='max-w-md rounded-lg bg-white p-8 shadow-lg dark:bg-zinc-800'>
-            <h1 className='mb-4 text-2xl font-bold text-red-600'>出错了！</h1>
-            <p className='mb-4 text-gray-700 dark:text-gray-300'>应用遇到了一个错误：</p>
-            <pre className='overflow-auto rounded bg-gray-100 p-4 text-sm dark:bg-zinc-900'>
-              {this.state.error?.toString()}
-            </pre>
-            <button
-              onClick={() => window.location.reload()}
-              className='mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'
-            >
-              重新加载
-            </button>
-          </div>
+        <div className='flex h-screen items-center justify-center bg-content1'>
+          <Card className='max-w-md'>
+            <CardHeader className='flex gap-3'>
+              <AlertCircle className='h-8 w-8 text-danger' />
+              <div className='flex flex-col'>
+                <h1 className='text-xl font-bold text-danger'>出错了！</h1>
+                <p className='text-sm text-default-500'>应用遇到了一个错误</p>
+              </div>
+            </CardHeader>
+            <CardBody className='gap-4'>
+              <Code className='w-full overflow-auto whitespace-pre-wrap'>{this.state.error?.toString()}</Code>
+              <Button color='primary' onPress={() => window.location.reload()}>
+                重新加载
+              </Button>
+            </CardBody>
+          </Card>
         </div>
       )
     }
