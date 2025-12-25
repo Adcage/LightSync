@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Divider, Card } from '@nextui-org/react'
@@ -6,25 +6,12 @@ import { ThemeSwitch } from '../components/ThemeSwitch'
 import LanguageSwitch from '../components/LanguageSwitch'
 import Sidebar from '../components/Sidebar'
 import WindowControl from '../components/WindowControl'
-import { getOsType } from '../utils/system'
+import { osType } from '../utils/env'
 import logoImage from '../assets/logo.png'
 
 const MainLayout: React.FC = () => {
   const { t } = useTranslation()
   const location = useLocation()
-  const [osType, setOsType] = useState<string>('')
-
-  useEffect(() => {
-    const initOsType = async () => {
-      try {
-        const os = await getOsType()
-        setOsType(os)
-      } catch (error) {
-        console.error('获取操作系统类型失败:', error)
-      }
-    }
-    initOsType()
-  }, [])
 
   // 根据路由获取页面标题
   const getPageTitle = () => {
