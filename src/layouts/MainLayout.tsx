@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation } from 'react-router-dom'
 import logoImage from '../assets/logo.png'
 import LanguageSwitch from '../components/LanguageSwitch'
-import { OsTypeDebug } from '../components/OsTypeDebug'
 import Sidebar from '../components/Sidebar'
 import { ThemeSwitch } from '../components/ThemeSwitch'
 import WindowControl from '../components/WindowControl'
@@ -14,9 +13,6 @@ import { osType } from '../utils/env'
 const MainLayout: React.FC = () => {
   const { t } = useTranslation()
   const location = useLocation()
-
-  // 临时调试：打印 osType
-  console.log('MainLayout osType:', osType)
 
   // 窗口拖拽处理
   const handleDrag = async (e: React.MouseEvent) => {
@@ -99,9 +95,6 @@ const MainLayout: React.FC = () => {
           <Outlet />
         </div>
       </div>
-
-      {/* 临时调试组件 */}
-      <OsTypeDebug />
     </>
   )
 }
