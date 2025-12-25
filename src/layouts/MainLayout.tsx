@@ -6,12 +6,16 @@ import { ThemeSwitch } from '../components/ThemeSwitch'
 import LanguageSwitch from '../components/LanguageSwitch'
 import Sidebar from '../components/Sidebar'
 import WindowControl from '../components/WindowControl'
+import { OsTypeDebug } from '../components/OsTypeDebug'
 import { osType } from '../utils/env'
 import logoImage from '../assets/logo.png'
 
 const MainLayout: React.FC = () => {
   const { t } = useTranslation()
   const location = useLocation()
+
+  // 临时调试：打印 osType
+  console.log('MainLayout osType:', osType)
 
   // 根据路由获取页面标题
   const getPageTitle = () => {
@@ -91,6 +95,9 @@ const MainLayout: React.FC = () => {
           <Outlet />
         </div>
       </div>
+
+      {/* 临时调试组件 */}
+      <OsTypeDebug />
     </>
   )
 }
