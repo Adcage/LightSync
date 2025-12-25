@@ -1,4 +1,3 @@
-use std::ffi::c_int;
 /// LightSync 配置文件监听模块
 ///
 /// 监听配置文件变化，当配置文件被外部程序修改时通知前端
@@ -53,16 +52,14 @@ impl ConfigWatcher {
             },
             Config::default()
                 .with_poll_interval(Duration::from_secs(2)) // 增加轮询间隔
-                .with_compare_contents(false) // 禁用内容比较，提高性能
+                .with_compare_contents(false), // 禁用内容比较，提高性能
         )
         .map_err(|e| SyncError::WatcherError(format!("Failed to create watcher: {}", e)))?;
 
         // 监听配置文件
         watcher
             .watch(&config_path, RecursiveMode::NonRecursive)
-            .map_err(|e| {
-                SyncError::WatcherError(format!("Failed to watch config file: {}", e))
-            })?;
+            .map_err(|e| SyncError::WatcherError(format!("Failed to watch config file: {}", e)))?;
 
         // 保存 watcher 实例
         let mut watcher_lock = self.watcher.lock().await;
@@ -117,7 +114,7 @@ impl ConfigWatcher {
     pub async fn stop(&self) {
         let mut watcher_lock = self.watcher.lock().await;
         *watcher_lock = None;
-        
+
         // 重置最后事件时间
         let mut last_time = self.last_event_time.lock().await;
         *last_time = None;
@@ -137,21 +134,21 @@ pub async fn start_config_watcher(app: AppHandle) -> Result<()> {
 
     // 创建配置目录（如果不存在）
     if !config_dir.exists() {
-        std::fs::create_dir_all(&config_dir).map_err(|e| {
-            SyncError::ConfigError(format!("Failed to create config dir: {}", e))
-        })?;
+        std::fs::create_dir_all(&config_dir)
+            .map_err(|e| SyncError::ConfigError(format!("Failed to create config dir: {}", e)))?;
     }
 
     // 创建配置文件（如果不存在）
     if !config_path.exists() {
-        std::fs::write(&config_path, "{}").map_err(|e| {
-            SyncError::ConfigError(format!("Failed to create config file: {}", e))
-        })?;
+        std::fs::write(&config_path, "{}")
+            .map_err(|e| SyncError::ConfigError(format!("Failed to create config file: {}", e)))?;
     }
 
     // 检查是否已经存在监听器，避免重复创建
     if app.try_state::<ConfigWatcher>().is_some() {
-        return Err(SyncError::ConfigError("Config watcher already running".to_string()));
+        return Err(SyncError::ConfigError(
+            "Config watcher already running".to_string(),
+        ));
     }
 
     // 创建监听器并存储到应用状态中
@@ -162,7 +159,7 @@ pub async fn start_config_watcher(app: AppHandle) -> Result<()> {
     // 启动监听器
     let config_path_clone = config_path.clone();
     let app_handle = app.clone();
-    
+
     // 使用 tokio::spawn 创建任务，并处理可能的错误
     tokio::spawn(async move {
         match watcher_clone.start(config_path_clone).await {
@@ -185,7 +182,7 @@ pub async fn start_config_watcher(app: AppHandle) -> Result<()> {
 pub async fn stop_config_watcher(app: AppHandle) -> Result<()> {
     if let Some(watcher) = app.try_state::<ConfigWatcher>() {
         watcher.stop().await;
-        
+
         // 发送停止事件到前端
         let _ = app.emit("config-watcher-stopped", "Config watcher stopped");
     }
@@ -200,4 +197,3 @@ mod tests {
         // 注意: 这个测试需要在 Tauri 环境中运行
     }
 }
-

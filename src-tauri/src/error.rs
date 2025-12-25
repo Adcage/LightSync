@@ -38,6 +38,10 @@ pub enum SyncError {
     #[error("File not found: {0}")]
     FileNotFound(String),
 
+    /// 资源未找到错误
+    #[error("Not found: {0}")]
+    NotFound(String),
+
     /// 配置错误
     #[error("Configuration error: {0}")]
     ConfigError(String),
@@ -75,7 +79,7 @@ mod tests {
     #[test]
     fn test_error_display() {
         let error = SyncError::FileNotFound("test.txt".to_string());
-        print!("{}",error.to_string());
+        print!("{}", error.to_string());
         assert_eq!(error.to_string(), "File not found: test.txt");
     }
 

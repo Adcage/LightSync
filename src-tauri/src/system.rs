@@ -2,8 +2,8 @@
 
 use std::env;
 
-/// 获取操作系统类型
-pub fn get_os_type() -> String {
+/// 获取操作系统类型（内部使用）
+fn get_os_type_internal() -> String {
     std::env::consts::OS.to_string()
 }
 
@@ -14,21 +14,18 @@ pub fn get_arch() -> String {
 
 /// 获取系统信息
 pub fn get_system_info() -> String {
-    format!("{}-{}", get_os_type(), get_arch())
+    format!("{}-{}", get_os_type_internal(), get_arch())
 }
 
 /// 获取当前运行环境信息
 #[tauri::command]
 pub fn get_runtime_environment() -> crate::Result<String> {
-    let os_type = get_os_type();
+    let os_type = get_os_type_internal();
     let arch = get_arch();
     let app_version = env!("CARGO_PKG_VERSION");
-    
-    let env_info = format!(
-        "OS: {}, Arch: {}, App: {}",
-        os_type, arch, app_version
-    );
-    
+
+    let env_info = format!("OS: {}, Arch: {}, App: {}", os_type, arch, app_version);
+
     Ok(env_info)
 }
 
@@ -40,6 +37,20 @@ pub fn get_environment_mode() -> crate::Result<String> {
     } else {
         "production".to_string()
     };
-    
+
     Ok(mode)
+}
+
+/// 获取操作系统类型（用于 UI 适配）
+/// 返回值: "Windows", "Darwin", "Linux" 等
+#[tauri::command]
+pub fn get_os_type() -> crate::Result<String> {
+    let os = match std::env::consts::OS {
+        "windows" => "Windows",
+        "macos" => "Darwin",
+        "linux" => "Linux",
+        other => other,
+    };
+
+    Ok(os.to_string())
 }
