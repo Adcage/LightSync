@@ -195,13 +195,7 @@ useEffect(() => {
 // 在服务端渲染或未挂载时显示占位符，避免布局偏移
 if (!mounted || !currentTheme) {
   return (
-    <Button
-      isIconOnly
-      variant="light"
-      aria-label="Toggle theme"
-      className="text-default-500 opacity-50"
-      disabled
-    >
+    <Button isIconOnly variant="light" aria-label="Toggle theme" className="text-default-500 opacity-50" disabled>
       <div className="h-6 w-6" />
     </Button>
   )

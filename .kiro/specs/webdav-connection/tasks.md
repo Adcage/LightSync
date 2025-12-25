@@ -18,7 +18,7 @@
     - 添加字段验证
     - _Requirements: 1.1, 1.3_
 
-  - [ ] 1.4 实现数据库 CRUD 操作
+  - [x] 1.4 实现数据库 CRUD 操作
     - 创建 `src-tauri/src/webdav/` 模块文件夹
     - 创建 `src-tauri/src/webdav/mod.rs` 模块导出文件
     - 创建 `src-tauri/src/webdav/db.rs` 数据库操作模块

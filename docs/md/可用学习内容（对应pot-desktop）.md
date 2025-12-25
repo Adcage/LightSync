@@ -86,6 +86,7 @@ src-tauri/src/
    - 避免重复初始化，线程安全
 
 3. **状态包装器模式**
+
    ```rust
    // src-tauri/src/main.rs (42行)
    pub struct StringWrapper(pub Mutex<String>);
@@ -1247,9 +1248,7 @@ export default function Config() {
       {/* 侧边栏 */}
       <Card
         shadow="none"
-        className={`${
-          transparent ? 'bg-background/90' : 'bg-content1'
-        } float-left h-screen w-[230px] rounded-none ${
+        className={`${transparent ? 'bg-background/90' : 'bg-content1'} float-left h-screen w-[230px] rounded-none ${
           osType === 'Linux' && 'rounded-l-[10px] border-1'
         } cursor-default select-none border-r-1 border-default-100`}
       >
@@ -1301,14 +1300,8 @@ export const useToastStyle = () => {
   const { theme } = useTheme()
 
   const toastStyle = {
-    background:
-      theme == 'dark'
-        ? semanticColors.dark.content1.DEFAULT
-        : semanticColors.light.content1.DEFAULT,
-    color:
-      theme == 'dark'
-        ? semanticColors.dark.foreground.DEFAULT
-        : semanticColors.light.foreground.DEFAULT,
+    background: theme == 'dark' ? semanticColors.dark.content1.DEFAULT : semanticColors.light.content1.DEFAULT,
+    color: theme == 'dark' ? semanticColors.dark.foreground.DEFAULT : semanticColors.light.foreground.DEFAULT,
     wordBreak: 'break-all',
   }
 
