@@ -10,6 +10,8 @@ mod constants;
 mod database;
 // 系统信息模块
 mod system;
+// WebDAV 模块
+mod webdav;
 
 // 公开导出错误类型，供其他模块使用
 pub use error::{Result, SyncError};
@@ -78,6 +80,7 @@ pub fn run() {
             // 系统信息命令
             system::get_runtime_environment,
             system::get_environment_mode,
+            system::get_os_type,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
