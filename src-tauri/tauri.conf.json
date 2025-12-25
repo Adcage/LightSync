@@ -26,7 +26,8 @@
         "closable": true,
         "center": true,
         "fullscreen": false,
-        "skipTaskbar": false
+        "skipTaskbar": false,
+        "titleBarStyle": "Transparent"
       }
     ],
     "security": {
