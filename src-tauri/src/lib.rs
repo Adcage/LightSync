@@ -63,6 +63,24 @@ pub fn run() {
                 )
                 .build(),
         )
+        .setup(|app| {
+            use tauri::Manager;
+            
+            if let Some(window) = app.get_webview_window("main") {
+                #[cfg(target_os = "macos")]
+                {
+                    use tauri::TitleBarStyle;
+                    let _ = window.set_title_bar_style(TitleBarStyle::Overlay);
+                    let _ = window.set_title("");
+                }
+                
+                #[cfg(not(target_os = "macos"))]
+                {
+                    let _ = window.set_decorations(false);
+                }
+            }
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             test_error_success,
@@ -85,3 +103,4 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+?

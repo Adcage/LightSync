@@ -1,14 +1,15 @@
+import { Card, Divider } from '@nextui-org/react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import React from 'react'
-import { Outlet, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { Divider, Card } from '@nextui-org/react'
-import { ThemeSwitch } from '../components/ThemeSwitch'
-import LanguageSwitch from '../components/LanguageSwitch'
-import Sidebar from '../components/Sidebar'
-import WindowControl from '../components/WindowControl'
-import { OsTypeDebug } from '../components/OsTypeDebug'
-import { osType } from '../utils/env'
+import { Outlet, useLocation } from 'react-router-dom'
 import logoImage from '../assets/logo.png'
+import LanguageSwitch from '../components/LanguageSwitch'
+import { OsTypeDebug } from '../components/OsTypeDebug'
+import Sidebar from '../components/Sidebar'
+import { ThemeSwitch } from '../components/ThemeSwitch'
+import WindowControl from '../components/WindowControl'
+import { osType } from '../utils/env'
 
 const MainLayout: React.FC = () => {
   const { t } = useTranslation()
@@ -16,6 +17,14 @@ const MainLayout: React.FC = () => {
 
   // 临时调试：打印 osType
   console.log('MainLayout osType:', osType)
+
+  // 窗口拖拽处理
+  const handleDrag = async (e: React.MouseEvent) => {
+    if (e.button === 0) {
+      e.preventDefault()
+      await getCurrentWindow().startDragging()
+    }
+  }
 
   // 根据路由获取页面标题
   const getPageTitle = () => {
@@ -41,13 +50,11 @@ const MainLayout: React.FC = () => {
         } cursor-default select-none`}
       >
         {/* 顶部拖拽区域 */}
-        <div className='h-[35px] p-[5px]'>
-          <div className='h-full w-full' data-tauri-drag-region='true' />
-        </div>
+        <div className='h-[35px]' onMouseDown={handleDrag} />
 
         {/* Logo 区域 */}
         <div className='p-[5px]'>
-          <div data-tauri-drag-region='true'>
+          <div onMouseDown={handleDrag}>
             <img
               alt='LightSync logo'
               src={logoImage}
@@ -67,12 +74,9 @@ const MainLayout: React.FC = () => {
           osType === 'Linux' && 'rounded-r-[10px] border-1 border-l-0 border-default-100'
         }`}
       >
-        {/* 顶部拖拽区域（固定定位，覆盖在标题栏上方） */}
-        <div data-tauri-drag-region='true' className='fixed left-[235px] right-[5px] top-[5px] h-[30px]' />
-
         {/* 标题栏 */}
         <div className='flex h-[35px] justify-between'>
-          <div className='flex items-center'>
+          <div className='flex flex-1 items-center' onMouseDown={handleDrag}>
             <h2 className='ml-[10px] text-base font-semibold'>{getPageTitle()}</h2>
           </div>
 
