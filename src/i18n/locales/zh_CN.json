@@ -1,665 +1,665 @@
 {
-    "translation": {
-        "common": {
-            "ok": "确定",
-            "cancel": "取消",
-            "save": "保存",
-            "write_clipboard": "写入剪贴板",
-            "plugin": "插件",
-            "coming": "敬请期待…",
-            "clear": "清空"
+  "translation": {
+    "common": {
+      "ok": "确定",
+      "cancel": "取消",
+      "save": "保存",
+      "write_clipboard": "写入剪贴板",
+      "plugin": "插件",
+      "coming": "敬请期待…",
+      "clear": "清空"
+    },
+    "nav": {
+      "dashboard": "仪表盘",
+      "servers": "服务器",
+      "folders": "文件夹",
+      "logs": "日志",
+      "settings": "设置",
+      "about": "关于"
+    },
+    "dashboard": {
+      "title": "仪表盘",
+      "syncOverview": "同步状态总览",
+      "lastSync": "最后同步",
+      "activeTasks": "活跃任务",
+      "todayStats": "今日统计",
+      "uploadDownload": "上传 {{upload}}个文件 ({{uploadSize}})，下载 {{download}}个文件 ({{downloadSize}})",
+      "errors": "错误数量",
+      "syncFolders": "同步文件夹",
+      "syncAll": "立即全部同步",
+      "pauseAll": "暂停全部",
+      "syncing": "同步中",
+      "remainingTime": "剩余时间",
+      "lastError": "最后错误",
+      "retryCount": "重试次数",
+      "fileCount": "共有 {{count}} 个文件",
+      "noFolders": "暂无同步文件夹",
+      "addFirstFolder": "添加第一个同步文件夹",
+      "quickActions": "快速操作",
+      "addServer": "添加服务器",
+      "addFolder": "添加文件夹",
+      "viewLogs": "查看日志"
+    },
+    "servers": {
+      "title": "服务器管理",
+      "serverList": "已配置的服务器",
+      "addServer": "添加服务器",
+      "editServer": "编辑服务器",
+      "deleteServer": "删除服务器",
+      "serverName": "服务器名称",
+      "webdavUrl": "WebDAV URL",
+      "username": "用户名",
+      "password": "密码",
+      "timeout": "连接超时（秒）",
+      "urlDescription": "请输入完整的WebDAV地址，包含协议和路径",
+      "connected": "已连接",
+      "disconnected": "未连接",
+      "unknown": "未知",
+      "lastTest": "最后测试",
+      "actions": "操作",
+      "confirmDelete": "确定要删除这个服务器配置吗？",
+      "noServers": "暂无服务器配置",
+      "addFirstServer": "添加第一个WebDAV服务器以开始同步文件"
+    },
+    "folders": {
+      "title": "同步文件夹",
+      "folderList": "同步文件夹列表",
+      "addFolder": "添加同步文件夹",
+      "editFolder": "编辑同步文件夹",
+      "deleteFolder": "删除同步文件夹",
+      "folderName": "文件夹名称",
+      "folderNamePlaceholder": "例如：Documents",
+      "localPath": "本地路径",
+      "remotePath": "远程路径",
+      "server": "服务器",
+      "syncDirection": "同步方向",
+      "syncDirectionBoth": "双向同步",
+      "syncDirectionUpload": "仅上传",
+      "syncDirectionDownload": "仅下载",
+      "syncInterval": "同步间隔（分钟）",
+      "conflictResolution": "冲突解决策略",
+      "conflictAskUser": "询问用户",
+      "conflictLocalWins": "本地优先",
+      "conflictRemoteWins": "远程优先",
+      "conflictKeepBoth": "保留两者",
+      "ignorePatterns": "忽略规则",
+      "ignorePatternsDescription": "每行一个规则，支持glob模式匹配",
+      "maxFileSize": "最大文件大小（MB）",
+      "maxFileSizeDescription": "超过此大小的文件不会自动同步",
+      "localPathDescription": "选择要同步的本地文件夹路径",
+      "remotePathDescription": "服务器上的相对路径",
+      "paths": "路径",
+      "status": "状态",
+      "lastSync": "最后同步",
+      "actions": "操作",
+      "confirmDelete": "确定要删除这个同步文件夹吗？这将不会删除本地或远程文件。",
+      "noFolders": "暂无同步文件夹",
+      "addFirstFolder": "添加您的第一个同步文件夹以开始文件同步"
+    },
+    "logs": {
+      "title": "同步日志",
+      "operationHistory": "操作历史",
+      "records": "条记录",
+      "refresh": "刷新",
+      "export": "导出",
+      "search": "搜索",
+      "searchPlaceholder": "搜索文件名或文件夹名...",
+      "filterAction": "操作类型",
+      "filterStatus": "状态",
+      "filterDate": "日期",
+      "filterAll": "全部",
+      "upload": "上传",
+      "download": "下载",
+      "delete": "删除",
+      "conflict": "冲突",
+      "ignored": "已忽略",
+      "success": "成功",
+      "failed": "失败",
+      "resolved": "已解决",
+      "unknown": "未知",
+      "timestamp": "时间",
+      "folder": "文件夹",
+      "file": "文件",
+      "size": "大小",
+      "duration": "耗时",
+      "noLogs": "暂无日志记录",
+      "noLogsDescription": "当您开始同步文件后，操作历史将显示在这里"
+    },
+    "settings": {
+      "title": "设置",
+      "general": "常规设置",
+      "autoStart": "开机时启动应用",
+      "checkUpdate": "启动时检查更新",
+      "minimizeToTray": "最小化到托盘",
+      "appearance": "外观设置",
+      "language": "语言",
+      "theme": "主题",
+      "lightTheme": "浅色",
+      "darkTheme": "深色",
+      "systemTheme": "跟随系统",
+      "sync": "同步设置",
+      "maxConcurrentSyncs": "最大并发同步数",
+      "bandwidthLimit": "带宽限制 (MB/s)",
+      "logLevel": "日志级别",
+      "enableTelemetry": "启用遥测",
+      "advanced": "高级设置",
+      "exportSettings": "导出设置",
+      "importSettings": "导入设置",
+      "resetSettings": "重置设置",
+      "settingsManagement": "设置管理",
+      "confirmReset": "确定要重置所有设置为默认值吗？"
+    },
+    "about": {
+      "title": "关于",
+      "features": "主要特性",
+      "lightweight": "轻量高效",
+      "lightweightDesc": "内存占用小于50MB，启动时间小于3秒",
+      "crossPlatform": "跨平台支持",
+      "crossPlatformDesc": "支持Windows、macOS和Linux",
+      "webdav": "WebDAV协议",
+      "webdavDesc": "兼容主流WebDAV服务商",
+      "security": "安全可靠",
+      "securityDesc": "密码加密存储，支持HTTPS",
+      "customizable": "高度可定制",
+      "customizableDesc": "灵活的同步策略和冲突处理",
+      "techStack": "技术栈",
+      "license": "许可证",
+      "author": "作者",
+      "releaseDate": "发布日期",
+      "buildNumber": "构建号",
+      "copyright": "版权所有",
+      "madeWith": "使用",
+      "heart": "❤️",
+      "and": "和",
+      "coffee": "☕",
+      "in": "在",
+      "links": "链接和操作",
+      "viewSource": "查看源代码",
+      "viewDocumentation": "查看文档",
+      "checkUpdate": "检查更新",
+      "reportIssue": "报告问题"
+    },
+    "languages": {
+      "auto": "自动检测",
+      "zh_cn": "简体中文",
+      "zh_tw": "繁體中文",
+      "ja": "日语",
+      "en": "英语",
+      "ko": "韩语",
+      "fr": "法语",
+      "es": "西班牙语",
+      "ru": "俄语",
+      "de": "德语",
+      "it": "意大利语",
+      "tr": "土耳其语",
+      "pt_pt": "葡萄牙语",
+      "pt_br": "葡萄牙语 (巴西)",
+      "vi": "越南语",
+      "id": "印尼语",
+      "th": "泰语",
+      "ms": "马来语",
+      "ar": "阿拉伯语",
+      "hi": "印地语",
+      "mn_mo": "蒙古语",
+      "mn_cy": "蒙古语(西里尔)",
+      "km": "高棉语",
+      "nb_no": "书面挪威语",
+      "nn_no": "新挪威语",
+      "fa": "波斯语",
+      "sv": "瑞典语",
+      "pl": "波兰语",
+      "nl": "荷兰语",
+      "uk": "乌克兰语",
+      "he": "希伯来语"
+    },
+    "config": {
+      "general": {
+        "label": "常规设置",
+        "title": "常规设置",
+        "auto_start": "开机时启动应用",
+        "check_update": "启动时检查更新",
+        "server_port": "监听端口",
+        "server_port_change": "监听端口已更改，重启应用生效",
+        "app_language": "显示语言",
+        "app_theme": "应用主题",
+        "app_font": "字体",
+        "app_fallback_font": "后备字体",
+        "font_size": {
+          "title": "字体大小",
+          "10": "极小 (10px)",
+          "12": "特小 (12px)",
+          "14": "小 (14px)",
+          "16": "标准 (16px)",
+          "18": "大 (18px)",
+          "20": "特大 (20px)",
+          "24": "超大 (24px)"
         },
-        "nav": {
-            "dashboard": "仪表盘",
-            "servers": "服务器",
-            "folders": "文件夹",
-            "logs": "日志",
-            "settings": "设置",
-            "about": "关于"
+        "default_font": "默认",
+        "theme": {
+          "light": "浅色",
+          "dark": "深色",
+          "system": "跟随系统"
         },
-        "dashboard": {
-            "title": "仪表盘",
-            "syncOverview": "同步状态总览",
-            "lastSync": "最后同步",
-            "activeTasks": "活跃任务",
-            "todayStats": "今日统计",
-            "uploadDownload": "上传 {{upload}}个文件 ({{uploadSize}})，下载 {{download}}个文件 ({{downloadSize}})",
-            "errors": "错误数量",
-            "syncFolders": "同步文件夹",
-            "syncAll": "立即全部同步",
-            "pauseAll": "暂停全部",
-            "syncing": "同步中",
-            "remainingTime": "剩余时间",
-            "lastError": "最后错误",
-            "retryCount": "重试次数",
-            "fileCount": "共有 {{count}} 个文件",
-            "noFolders": "暂无同步文件夹",
-            "addFirstFolder": "添加第一个同步文件夹",
-            "quickActions": "快速操作",
-            "addServer": "添加服务器",
-            "addFolder": "添加文件夹",
-            "viewLogs": "查看日志"
+        "transparent": "透明效果",
+        "dev_mode": "开发模式",
+        "proxy": {
+          "title": "网络代理",
+          "host": "代理地址",
+          "port": "代理端口",
+          "username": "用户名",
+          "password": "密码",
+          "no_proxy": "不使用代理的地址或IP"
         },
-        "servers": {
-            "title": "服务器管理",
-            "serverList": "已配置的服务器",
-            "addServer": "添加服务器",
-            "editServer": "编辑服务器",
-            "deleteServer": "删除服务器",
-            "serverName": "服务器名称",
-            "webdavUrl": "WebDAV URL",
-            "username": "用户名",
-            "password": "密码",
-            "timeout": "连接超时（秒）",
-            "urlDescription": "请输入完整的WebDAV地址，包含协议和路径",
-            "connected": "已连接",
-            "disconnected": "未连接",
-            "unknown": "未知",
-            "lastTest": "最后测试",
-            "actions": "操作",
-            "confirmDelete": "确定要删除这个服务器配置吗？",
-            "noServers": "暂无服务器配置",
-            "addFirstServer": "添加第一个WebDAV服务器以开始同步文件"
-        },
-        "folders": {
-            "title": "同步文件夹",
-            "folderList": "同步文件夹列表",
-            "addFolder": "添加同步文件夹",
-            "editFolder": "编辑同步文件夹",
-            "deleteFolder": "删除同步文件夹",
-            "folderName": "文件夹名称",
-            "folderNamePlaceholder": "例如：Documents",
-            "localPath": "本地路径",
-            "remotePath": "远程路径",
-            "server": "服务器",
-            "syncDirection": "同步方向",
-            "syncDirectionBoth": "双向同步",
-            "syncDirectionUpload": "仅上传",
-            "syncDirectionDownload": "仅下载",
-            "syncInterval": "同步间隔（分钟）",
-            "conflictResolution": "冲突解决策略",
-            "conflictAskUser": "询问用户",
-            "conflictLocalWins": "本地优先",
-            "conflictRemoteWins": "远程优先",
-            "conflictKeepBoth": "保留两者",
-            "ignorePatterns": "忽略规则",
-            "ignorePatternsDescription": "每行一个规则，支持glob模式匹配",
-            "maxFileSize": "最大文件大小（MB）",
-            "maxFileSizeDescription": "超过此大小的文件不会自动同步",
-            "localPathDescription": "选择要同步的本地文件夹路径",
-            "remotePathDescription": "服务器上的相对路径",
-            "paths": "路径",
-            "status": "状态",
-            "lastSync": "最后同步",
-            "actions": "操作",
-            "confirmDelete": "确定要删除这个同步文件夹吗？这将不会删除本地或远程文件。",
-            "noFolders": "暂无同步文件夹",
-            "addFirstFolder": "添加您的第一个同步文件夹以开始文件同步"
-        },
-        "logs": {
-            "title": "同步日志",
-            "operationHistory": "操作历史",
-            "records": "条记录",
-            "refresh": "刷新",
-            "export": "导出",
-            "search": "搜索",
-            "searchPlaceholder": "搜索文件名或文件夹名...",
-            "filterAction": "操作类型",
-            "filterStatus": "状态",
-            "filterDate": "日期",
-            "filterAll": "全部",
-            "upload": "上传",
-            "download": "下载",
-            "delete": "删除",
-            "conflict": "冲突",
-            "ignored": "已忽略",
-            "success": "成功",
-            "failed": "失败",
-            "resolved": "已解决",
-            "unknown": "未知",
-            "timestamp": "时间",
-            "folder": "文件夹",
-            "file": "文件",
-            "size": "大小",
-            "duration": "耗时",
-            "noLogs": "暂无日志记录",
-            "noLogsDescription": "当您开始同步文件后，操作历史将显示在这里"
-        },
-        "settings": {
-            "title": "设置",
-            "general": "常规设置",
-            "autoStart": "开机时启动应用",
-            "checkUpdate": "启动时检查更新",
-            "minimizeToTray": "最小化到托盘",
-            "appearance": "外观设置",
-            "language": "语言",
-            "theme": "主题",
-            "lightTheme": "浅色",
-            "darkTheme": "深色",
-            "systemTheme": "跟随系统",
-            "sync": "同步设置",
-            "maxConcurrentSyncs": "最大并发同步数",
-            "bandwidthLimit": "带宽限制 (MB/s)",
-            "logLevel": "日志级别",
-            "enableTelemetry": "启用遥测",
-            "advanced": "高级设置",
-            "exportSettings": "导出设置",
-            "importSettings": "导入设置",
-            "resetSettings": "重置设置",
-            "settingsManagement": "设置管理",
-            "confirmReset": "确定要重置所有设置为默认值吗？"
-        },
-        "about": {
-            "title": "关于",
-            "features": "主要特性",
-            "lightweight": "轻量高效",
-            "lightweightDesc": "内存占用小于50MB，启动时间小于3秒",
-            "crossPlatform": "跨平台支持",
-            "crossPlatformDesc": "支持Windows、macOS和Linux",
-            "webdav": "WebDAV协议",
-            "webdavDesc": "兼容主流WebDAV服务商",
-            "security": "安全可靠",
-            "securityDesc": "密码加密存储，支持HTTPS",
-            "customizable": "高度可定制",
-            "customizableDesc": "灵活的同步策略和冲突处理",
-            "techStack": "技术栈",
-            "license": "许可证",
-            "author": "作者",
-            "releaseDate": "发布日期",
-            "buildNumber": "构建号",
-            "copyright": "版权所有",
-            "madeWith": "使用",
-            "heart": "❤️",
-            "and": "和",
-            "coffee": "☕",
-            "in": "在",
-            "links": "链接和操作",
-            "viewSource": "查看源代码",
-            "viewDocumentation": "查看文档",
-            "checkUpdate": "检查更新",
-            "reportIssue": "报告问题"
-        },
-        "languages": {
-            "auto": "自动检测",
-            "zh_cn": "简体中文",
-            "zh_tw": "繁體中文",
-            "ja": "日语",
-            "en": "英语",
-            "ko": "韩语",
-            "fr": "法语",
-            "es": "西班牙语",
-            "ru": "俄语",
-            "de": "德语",
-            "it": "意大利语",
-            "tr": "土耳其语",
-            "pt_pt": "葡萄牙语",
-            "pt_br": "葡萄牙语 (巴西)",
-            "vi": "越南语",
-            "id": "印尼语",
-            "th": "泰语",
-            "ms": "马来语",
-            "ar": "阿拉伯语",
-            "hi": "印地语",
-            "mn_mo": "蒙古语",
-            "mn_cy": "蒙古语(西里尔)",
-            "km": "高棉语",
-            "nb_no": "书面挪威语",
-            "nn_no": "新挪威语",
-            "fa": "波斯语",
-            "sv": "瑞典语",
-            "pl": "波兰语",
-            "nl": "荷兰语",
-            "uk": "乌克兰语",
-            "he": "希伯来语"
-        },
-        "config": {
-            "general": {
-                "label": "常规设置",
-                "title": "常规设置",
-                "auto_start": "开机时启动应用",
-                "check_update": "启动时检查更新",
-                "server_port": "监听端口",
-                "server_port_change": "监听端口已更改，重启应用生效",
-                "app_language": "显示语言",
-                "app_theme": "应用主题",
-                "app_font": "字体",
-                "app_fallback_font": "后备字体",
-                "font_size": {
-                    "title": "字体大小",
-                    "10": "极小 (10px)",
-                    "12": "特小 (12px)",
-                    "14": "小 (14px)",
-                    "16": "标准 (16px)",
-                    "18": "大 (18px)",
-                    "20": "特大 (20px)",
-                    "24": "超大 (24px)"
-                },
-                "default_font": "默认",
-                "theme": {
-                    "light": "浅色",
-                    "dark": "深色",
-                    "system": "跟随系统"
-                },
-                "transparent": "透明效果",
-                "dev_mode": "开发模式",
-                "proxy": {
-                    "title": "网络代理",
-                    "host": "代理地址",
-                    "port": "代理端口",
-                    "username": "用户名",
-                    "password": "密码",
-                    "no_proxy": "不使用代理的地址或IP"
-                },
-                "proxy_change": "代理已经改变，重启应用生效",
-                "proxy_error": "请填写代理地址和端口",
-                "tray_click_event": "托盘点击事件",
-                "event": {
-                    "config": "偏好设置",
-                    "translate": "打开翻译窗口",
-                    "disable": "禁用",
-                    "ocr_recognize": "文字识别",
-                    "ocr_translate": "截图翻译"
-                }
-            },
-            "translate": {
-                "label": "翻译设置",
-                "title": "翻译设置",
-                "source_language": "源语言",
-                "target_language": "目标语言",
-                "second_language": "第二目标语言",
-                "auto_copy": "自动复制",
-                "source": "原文",
-                "target": "译文",
-                "source_target": "原文+译文",
-                "disable": "禁用",
-                "history_disable": "禁用历史记录",
-                "incremental_translate": "增量翻译",
-                "dynamic_translate": "动态翻译",
-                "delete_newline": "自动删除换行",
-                "remember_language": "记住目标语言",
-                "font_size": {
-                    "title": "字体大小",
-                    "10": "极小 (10px)",
-                    "12": "特小 (12px)",
-                    "14": "小 (14px)",
-                    "16": "标准 (16px)",
-                    "18": "大 (18px)",
-                    "20": "特大 (20px)",
-                    "24": "超大 (24px)"
-                },
-                "window_position": "窗口位置",
-                "mouse": "跟随鼠标",
-                "pre_state": "记住位置",
-                "remember_window_size": "记住窗口大小",
-                "close_on_blur": "失去焦点时关闭窗口",
-                "always_on_top": "窗口默认置顶",
-                "hide_source": "隐藏原文",
-                "hide_language": "隐藏语言栏",
-                "hide_window": "隐藏翻译窗口",
-                "detect_engine": "语种检测引擎",
-                "baidu": "百度",
-                "tencent": "腾讯",
-                "niutrans": "小牛",
-                "google": "谷歌",
-                "bing": "必应",
-                "yandex": "Yandex",
-                "local": "本地"
-            },
-            "recognize": {
-                "label": "文字识别",
-                "title": "文字识别",
-                "language": "识别语言",
-                "delete_newline": "自动删除换行",
-                "auto_copy": "自动复制",
-                "close_on_blur": "失去焦点时关闭窗口",
-                "hide_window": "隐藏识别窗口"
-            },
-            "hotkey": {
-                "label": "热键设置",
-                "title": "热键设置",
-                "selection_translate": "划词翻译",
-                "input_translate": "输入翻译",
-                "ocr_recognize": "文字识别",
-                "ocr_translate": "截图翻译",
-                "is_register": "快捷键已被注册",
-                "success": "快捷键注册成功",
-                "set_hotkey": "按下按键设置快捷键"
-            },
-            "service": {
-                "label": "服务设置",
-                "title": "服务设置",
-                "translate": "翻译",
-                "tts": "语音合成",
-                "recognize": "文字识别",
-                "collection": "生词本",
-                "least": "请至少保留一个",
-                "add_builtin_service": "添加内置服务",
-                "add_external_service": "添加外部插件",
-                "add_service": "添加服务",
-                "test_failed": "测试失败",
-                "install_plugin": "安装外部插件",
-                "view_plugin_list": "查看插件列表",
-                "uninstall_success": "插件卸载成功",
-                "homepage": "插件主页"
-            },
-            "history": {
-                "label": "历史记录",
-                "title": "历史记录"
-            },
-            "backup": {
-                "label": "备份设置",
-                "title": "备份设置",
-                "type": "服务类型",
-                "webdav": "WebDav",
-                "local": "本地",
-                "aliyun": "阿里云盘",
-                "webdav_url": "WebDav地址",
-                "username": "用户名",
-                "password": "密码",
-                "logout": "退出登录",
-                "aliyun_login_first": "请先扫码登录",
-                "login_success": "登录成功",
-                "backup": "备份",
-                "restore": "恢复备份",
-                "list": "备份列表",
-                "load_success": "载入备份成功",
-                "backup_success": "备份成功",
-                "empty": "您还没有备份"
-            },
-            "about": {
-                "label": "关于应用",
-                "title": "关于应用",
-                "website": "官网",
-                "github": "GitHub",
-                "feedback": "问题反馈",
-                "issue": "议题",
-                "email": "邮件",
-                "community": "社区交流",
-                "check_update": "检查更新",
-                "view_log": "查看日志",
-                "view_config": "查看配置文件",
-                "qq_channel": "QQ 频道",
-                "qq_group": "QQ 群",
-                "telegram": "Telegram",
-                "discussion": "Github 讨论"
-            }
-        },
-        "updater": {
-            "title": "检查更新",
-            "latest": "## 已经是最新版本",
-            "progress": "下载进度",
-            "update": "更新",
-            "downloading": "下载中…",
-            "installing": "安装中…",
-            "cancel": "取消",
-            "installed": "安装完成，重启应用生效"
-        },
-        "services": {
-            "help": "配置指南",
-            "no_need": "无需配置",
-            "instance_name": "配置名称",
-            "translate": {
-                "deepl": {
-                    "title": "DeepL",
-                    "custom_url": "DeepLX 地址",
-                    "auth_key": "API 密钥",
-                    "type": "服务类型",
-                    "free": "内置免费",
-                    "api": "Auth Key",
-                    "deeplx": "DeepLX"
-                },
-                "google": {
-                    "title": "谷歌翻译",
-                    "custom_url": "自定义 URL"
-                },
-                "lingva": {
-                    "title": "Lingva"
-                },
-                "bing": {
-                    "title": "必应翻译"
-                },
-                "ollama": {
-                    "title": "Ollama",
-                    "install_ollama": "无法连接到本地ollama，请先下载安装并启动ollama，如果您使用不在本机上的ollama，请更改请求地址",
-                    "install_ollama_link": "Ollama 下载地址",
-                    "request_path": "请求地址",
-                    "stream": "流式输出",
-                    "model": "模型",
-                    "install_model": "安装",
-                    "ready": "就绪",
-                    "not_installed": "该模型还未安装，点击立即下载安装",
-                    "supported_models": "点击查看 Ollama 可用模型列表",
-                    "prompt_description": "通过自定义Prompt自定义AI的行为, $text $from $to $detect 将会被替换为 待翻译文本，源语言，目标语言和检测到的语言。",
-                    "add": "添加 Prompt"
-                },
-                "openai": {
-                    "title": "OpenAI",
-                    "service": "服务提供商",
-                    "openai": "OpenAI",
-                    "azure": "Azure",
-                    "request_path": "请求地址",
-                    "api_key": "Api Key",
-                    "model": "模型",
-                    "stream": "流式输出",
-                    "prompt_description": "通过自定义Prompt自定义OpenAI行为, $text $from $to $detect 将会被替换为 待翻译文本，源语言，目标语言和检测到的语言。",
-                    "add": "添加 Prompt"
-                },
-                "geminipro": {
-                    "title": "Gemini Pro",
-                    "request_path": "请求地址",
-                    "api_key": "Api Key",
-                    "stream": "流式输出",
-                    "prompt_description": "通过自定义Prompt自定义Gemini Pro的行为, $text $from $to $detect 将会被替换为 待翻译文本，源语言，目标语言和检测到的语言。",
-                    "add": "添加 Prompt"
-                },
-                "chatglm": {
-                    "title": "智谱 AI",
-                    "model": "模型",
-                    "chatglm_turbo": "ChatGLM Turbo",
-                    "chatglm_pro": "ChatGLM Pro",
-                    "chatglm_std": "ChatGLM Std",
-                    "chatglm_lite": "ChatGLM Lite",
-                    "api_key": "Api Key",
-                    "prompt_description": "通过自定义Prompt自定义AI行为, $text $from $to $detect 将会被替换为 待翻译文本，源语言，目标语言和检测到的语言。",
-                    "add": "添加 Prompt"
-                },
-                "yandex": {
-                    "title": "Yandex"
-                },
-                "ecdict": {
-                    "title": "ECDict(在线)"
-                },
-                "transmart": {
-                    "title": "腾讯交互翻译",
-                    "username": "用户名",
-                    "token": "Token"
-                },
-                "baidu": {
-                    "title": "百度翻译",
-                    "appid": "App ID",
-                    "secret": "Secret"
-                },
-                "baidu_field": {
-                    "title": "百度领域翻译",
-                    "it": "信息技术",
-                    "finance": "金融财经",
-                    "machinery": "机械制造",
-                    "senimed": "生物医药",
-                    "novel": "网络文学",
-                    "academic": "学术论文",
-                    "aerospace": "航空航天",
-                    "wiki": "人文社科",
-                    "news": "新闻资讯",
-                    "law": "法律法规",
-                    "contract": "合同"
-                },
-                "alibaba": {
-                    "title": "阿里翻译",
-                    "accesskey_id": "AccessKey ID",
-                    "accesskey_secret": "AccessKey Secret"
-                },
-                "tencent": {
-                    "title": "腾讯翻译",
-                    "secret_id": "Secret ID",
-                    "secret_key": "Secret Key"
-                },
-                "volcengine": {
-                    "title": "火山翻译",
-                    "appid": "App ID",
-                    "secret": "Secret"
-                },
-                "niutrans": {
-                    "title": "小牛翻译",
-                    "https": "使用 Https",
-                    "apikey": "API Key"
-                },
-                "youdao": {
-                    "title": "有道翻译",
-                    "appkey": "App ID",
-                    "key": "Key"
-                },
-                "bing_dict": {
-                    "title": "必应词典"
-                },
-                "cambridge_dict": {
-                    "title": "剑桥词典"
-                },
-                "caiyun": {
-                    "title": "彩云小译",
-                    "token": "Token"
-                }
-            },
-            "recognize": {
-                "system": {
-                    "title": "系统 OCR"
-                },
-                "tesseract": {
-                    "title": "Tesseract.js"
-                },
-                "baidu_ocr": {
-                    "title": "百度 OCR",
-                    "client_id": "API Key",
-                    "client_secret": "Secret Key"
-                },
-                "baidu_accurate_ocr": {
-                    "title": "百度 OCR (高精度)",
-                    "client_id": "API Key",
-                    "client_secret": "Secret Key"
-                },
-                "baidu_img_ocr": {
-                    "title": "百度图片翻译",
-                    "appid": "App ID",
-                    "secret": "Secret"
-                },
-                "iflytek_ocr": {
-                    "title": "讯飞 OCR",
-                    "appid": "App ID",
-                    "apisecret": "API Secret",
-                    "apikey": "API Key"
-                },
-                "iflytek_intsig_ocr": {
-                    "title": "讯飞 OCR (Intsig)",
-                    "appid": "App ID",
-                    "apisecret": "API Secret",
-                    "apikey": "API Key"
-                },
-                "iflytek_latex_ocr": {
-                    "title": "讯飞公式识别",
-                    "appid": "App ID",
-                    "apisecret": "API Secret",
-                    "apikey": "API Key"
-                },
-                "simple_latex_ocr": {
-                    "title": "Simple LaTeX",
-                    "token": "Token"
-                },
-                "tencent_ocr": {
-                    "title": "腾讯 OCR",
-                    "secret_id": "Secret ID",
-                    "secret_key": "Secret Key"
-                },
-                "tencent_accurate_ocr": {
-                    "title": "腾讯 OCR (高精度)",
-                    "secret_id": "Secret ID",
-                    "secret_key": "Secret Key"
-                },
-                "tencent_img_ocr": {
-                    "title": "腾讯图片翻译",
-                    "secret_id": "Secret ID",
-                    "secret_key": "Secret Key"
-                },
-                "volcengine_ocr": {
-                    "title": "火山 OCR",
-                    "appid": "App ID",
-                    "secret": "Secret"
-                },
-                "volcengine_multi_lang_ocr": {
-                    "title": "火山 OCR (多语言)",
-                    "appid": "App ID",
-                    "secret": "Secret"
-                },
-                "qrcode": {
-                    "title": "二维码识别"
-                }
-            },
-            "tts": {
-                "lingva_tts": {
-                    "title": "Lingva",
-                    "request_path": "请求地址"
-                }
-            },
-            "collection": {
-                "anki": {
-                    "title": "Anki",
-                    "port": "端口号"
-                },
-                "eudic": {
-                    "title": "欧路词典",
-                    "name": "生词本名称",
-                    "token": "Token"
-                }
-            }
-        },
-        "translate": {
-            "translate": "翻译",
-            "add_collection_success": "添加成功",
-            "recognizing": "识别中…",
-            "speak": "朗读",
-            "copy": "复制",
-            "retry": "重试",
-            "delete_newline": "删除换行",
-            "translate_back": "翻译回原文"
-        },
-        "recognize": {
-            "recognize": "重新识别",
-            "translate": "翻译",
-            "copy_img": "复制图片",
-            "copy_text": "复制",
-            "delete_newline": "删除换行",
-            "delete_space": "删除空格"
-        },
-        "home": {
-            "title": "LightSync",
-            "subtitle": "轻量级跨设备文件同步工具，基于 WebDAV 协议实现高效、安全、可定制的文件同步",
-            "quickActions": {
-                "syncFolders": "同步文件夹",
-                "syncFoldersDesc": "配置和管理同步文件夹",
-                "webdavServers": "WebDAV 服务器",
-                "webdavServersDesc": "配置云端服务器连接",
-                "syncStatus": "同步状态",
-                "syncStatusDesc": "查看同步进度和历史记录",
-                "settings": "设置",
-                "settingsDesc": "应用配置和偏好设置"
-            },
-            "systemStatus": {
-                "title": "系统状态",
-                "activeSyncs": "活跃同步",
-                "syncedFiles": "已同步文件",
-                "transferred": "已传输数据"
-            },
-            "devTests": {
-                "title": "开发者测试"
-            }
+        "proxy_change": "代理已经改变，重启应用生效",
+        "proxy_error": "请填写代理地址和端口",
+        "tray_click_event": "托盘点击事件",
+        "event": {
+          "config": "偏好设置",
+          "translate": "打开翻译窗口",
+          "disable": "禁用",
+          "ocr_recognize": "文字识别",
+          "ocr_translate": "截图翻译"
         }
+      },
+      "translate": {
+        "label": "翻译设置",
+        "title": "翻译设置",
+        "source_language": "源语言",
+        "target_language": "目标语言",
+        "second_language": "第二目标语言",
+        "auto_copy": "自动复制",
+        "source": "原文",
+        "target": "译文",
+        "source_target": "原文+译文",
+        "disable": "禁用",
+        "history_disable": "禁用历史记录",
+        "incremental_translate": "增量翻译",
+        "dynamic_translate": "动态翻译",
+        "delete_newline": "自动删除换行",
+        "remember_language": "记住目标语言",
+        "font_size": {
+          "title": "字体大小",
+          "10": "极小 (10px)",
+          "12": "特小 (12px)",
+          "14": "小 (14px)",
+          "16": "标准 (16px)",
+          "18": "大 (18px)",
+          "20": "特大 (20px)",
+          "24": "超大 (24px)"
+        },
+        "window_position": "窗口位置",
+        "mouse": "跟随鼠标",
+        "pre_state": "记住位置",
+        "remember_window_size": "记住窗口大小",
+        "close_on_blur": "失去焦点时关闭窗口",
+        "always_on_top": "窗口默认置顶",
+        "hide_source": "隐藏原文",
+        "hide_language": "隐藏语言栏",
+        "hide_window": "隐藏翻译窗口",
+        "detect_engine": "语种检测引擎",
+        "baidu": "百度",
+        "tencent": "腾讯",
+        "niutrans": "小牛",
+        "google": "谷歌",
+        "bing": "必应",
+        "yandex": "Yandex",
+        "local": "本地"
+      },
+      "recognize": {
+        "label": "文字识别",
+        "title": "文字识别",
+        "language": "识别语言",
+        "delete_newline": "自动删除换行",
+        "auto_copy": "自动复制",
+        "close_on_blur": "失去焦点时关闭窗口",
+        "hide_window": "隐藏识别窗口"
+      },
+      "hotkey": {
+        "label": "热键设置",
+        "title": "热键设置",
+        "selection_translate": "划词翻译",
+        "input_translate": "输入翻译",
+        "ocr_recognize": "文字识别",
+        "ocr_translate": "截图翻译",
+        "is_register": "快捷键已被注册",
+        "success": "快捷键注册成功",
+        "set_hotkey": "按下按键设置快捷键"
+      },
+      "service": {
+        "label": "服务设置",
+        "title": "服务设置",
+        "translate": "翻译",
+        "tts": "语音合成",
+        "recognize": "文字识别",
+        "collection": "生词本",
+        "least": "请至少保留一个",
+        "add_builtin_service": "添加内置服务",
+        "add_external_service": "添加外部插件",
+        "add_service": "添加服务",
+        "test_failed": "测试失败",
+        "install_plugin": "安装外部插件",
+        "view_plugin_list": "查看插件列表",
+        "uninstall_success": "插件卸载成功",
+        "homepage": "插件主页"
+      },
+      "history": {
+        "label": "历史记录",
+        "title": "历史记录"
+      },
+      "backup": {
+        "label": "备份设置",
+        "title": "备份设置",
+        "type": "服务类型",
+        "webdav": "WebDav",
+        "local": "本地",
+        "aliyun": "阿里云盘",
+        "webdav_url": "WebDav地址",
+        "username": "用户名",
+        "password": "密码",
+        "logout": "退出登录",
+        "aliyun_login_first": "请先扫码登录",
+        "login_success": "登录成功",
+        "backup": "备份",
+        "restore": "恢复备份",
+        "list": "备份列表",
+        "load_success": "载入备份成功",
+        "backup_success": "备份成功",
+        "empty": "您还没有备份"
+      },
+      "about": {
+        "label": "关于应用",
+        "title": "关于应用",
+        "website": "官网",
+        "github": "GitHub",
+        "feedback": "问题反馈",
+        "issue": "议题",
+        "email": "邮件",
+        "community": "社区交流",
+        "check_update": "检查更新",
+        "view_log": "查看日志",
+        "view_config": "查看配置文件",
+        "qq_channel": "QQ 频道",
+        "qq_group": "QQ 群",
+        "telegram": "Telegram",
+        "discussion": "Github 讨论"
+      }
+    },
+    "updater": {
+      "title": "检查更新",
+      "latest": "## 已经是最新版本",
+      "progress": "下载进度",
+      "update": "更新",
+      "downloading": "下载中…",
+      "installing": "安装中…",
+      "cancel": "取消",
+      "installed": "安装完成，重启应用生效"
+    },
+    "services": {
+      "help": "配置指南",
+      "no_need": "无需配置",
+      "instance_name": "配置名称",
+      "translate": {
+        "deepl": {
+          "title": "DeepL",
+          "custom_url": "DeepLX 地址",
+          "auth_key": "API 密钥",
+          "type": "服务类型",
+          "free": "内置免费",
+          "api": "Auth Key",
+          "deeplx": "DeepLX"
+        },
+        "google": {
+          "title": "谷歌翻译",
+          "custom_url": "自定义 URL"
+        },
+        "lingva": {
+          "title": "Lingva"
+        },
+        "bing": {
+          "title": "必应翻译"
+        },
+        "ollama": {
+          "title": "Ollama",
+          "install_ollama": "无法连接到本地ollama，请先下载安装并启动ollama，如果您使用不在本机上的ollama，请更改请求地址",
+          "install_ollama_link": "Ollama 下载地址",
+          "request_path": "请求地址",
+          "stream": "流式输出",
+          "model": "模型",
+          "install_model": "安装",
+          "ready": "就绪",
+          "not_installed": "该模型还未安装，点击立即下载安装",
+          "supported_models": "点击查看 Ollama 可用模型列表",
+          "prompt_description": "通过自定义Prompt自定义AI的行为, $text $from $to $detect 将会被替换为 待翻译文本，源语言，目标语言和检测到的语言。",
+          "add": "添加 Prompt"
+        },
+        "openai": {
+          "title": "OpenAI",
+          "service": "服务提供商",
+          "openai": "OpenAI",
+          "azure": "Azure",
+          "request_path": "请求地址",
+          "api_key": "Api Key",
+          "model": "模型",
+          "stream": "流式输出",
+          "prompt_description": "通过自定义Prompt自定义OpenAI行为, $text $from $to $detect 将会被替换为 待翻译文本，源语言，目标语言和检测到的语言。",
+          "add": "添加 Prompt"
+        },
+        "geminipro": {
+          "title": "Gemini Pro",
+          "request_path": "请求地址",
+          "api_key": "Api Key",
+          "stream": "流式输出",
+          "prompt_description": "通过自定义Prompt自定义Gemini Pro的行为, $text $from $to $detect 将会被替换为 待翻译文本，源语言，目标语言和检测到的语言。",
+          "add": "添加 Prompt"
+        },
+        "chatglm": {
+          "title": "智谱 AI",
+          "model": "模型",
+          "chatglm_turbo": "ChatGLM Turbo",
+          "chatglm_pro": "ChatGLM Pro",
+          "chatglm_std": "ChatGLM Std",
+          "chatglm_lite": "ChatGLM Lite",
+          "api_key": "Api Key",
+          "prompt_description": "通过自定义Prompt自定义AI行为, $text $from $to $detect 将会被替换为 待翻译文本，源语言，目标语言和检测到的语言。",
+          "add": "添加 Prompt"
+        },
+        "yandex": {
+          "title": "Yandex"
+        },
+        "ecdict": {
+          "title": "ECDict(在线)"
+        },
+        "transmart": {
+          "title": "腾讯交互翻译",
+          "username": "用户名",
+          "token": "Token"
+        },
+        "baidu": {
+          "title": "百度翻译",
+          "appid": "App ID",
+          "secret": "Secret"
+        },
+        "baidu_field": {
+          "title": "百度领域翻译",
+          "it": "信息技术",
+          "finance": "金融财经",
+          "machinery": "机械制造",
+          "senimed": "生物医药",
+          "novel": "网络文学",
+          "academic": "学术论文",
+          "aerospace": "航空航天",
+          "wiki": "人文社科",
+          "news": "新闻资讯",
+          "law": "法律法规",
+          "contract": "合同"
+        },
+        "alibaba": {
+          "title": "阿里翻译",
+          "accesskey_id": "AccessKey ID",
+          "accesskey_secret": "AccessKey Secret"
+        },
+        "tencent": {
+          "title": "腾讯翻译",
+          "secret_id": "Secret ID",
+          "secret_key": "Secret Key"
+        },
+        "volcengine": {
+          "title": "火山翻译",
+          "appid": "App ID",
+          "secret": "Secret"
+        },
+        "niutrans": {
+          "title": "小牛翻译",
+          "https": "使用 Https",
+          "apikey": "API Key"
+        },
+        "youdao": {
+          "title": "有道翻译",
+          "appkey": "App ID",
+          "key": "Key"
+        },
+        "bing_dict": {
+          "title": "必应词典"
+        },
+        "cambridge_dict": {
+          "title": "剑桥词典"
+        },
+        "caiyun": {
+          "title": "彩云小译",
+          "token": "Token"
+        }
+      },
+      "recognize": {
+        "system": {
+          "title": "系统 OCR"
+        },
+        "tesseract": {
+          "title": "Tesseract.js"
+        },
+        "baidu_ocr": {
+          "title": "百度 OCR",
+          "client_id": "API Key",
+          "client_secret": "Secret Key"
+        },
+        "baidu_accurate_ocr": {
+          "title": "百度 OCR (高精度)",
+          "client_id": "API Key",
+          "client_secret": "Secret Key"
+        },
+        "baidu_img_ocr": {
+          "title": "百度图片翻译",
+          "appid": "App ID",
+          "secret": "Secret"
+        },
+        "iflytek_ocr": {
+          "title": "讯飞 OCR",
+          "appid": "App ID",
+          "apisecret": "API Secret",
+          "apikey": "API Key"
+        },
+        "iflytek_intsig_ocr": {
+          "title": "讯飞 OCR (Intsig)",
+          "appid": "App ID",
+          "apisecret": "API Secret",
+          "apikey": "API Key"
+        },
+        "iflytek_latex_ocr": {
+          "title": "讯飞公式识别",
+          "appid": "App ID",
+          "apisecret": "API Secret",
+          "apikey": "API Key"
+        },
+        "simple_latex_ocr": {
+          "title": "Simple LaTeX",
+          "token": "Token"
+        },
+        "tencent_ocr": {
+          "title": "腾讯 OCR",
+          "secret_id": "Secret ID",
+          "secret_key": "Secret Key"
+        },
+        "tencent_accurate_ocr": {
+          "title": "腾讯 OCR (高精度)",
+          "secret_id": "Secret ID",
+          "secret_key": "Secret Key"
+        },
+        "tencent_img_ocr": {
+          "title": "腾讯图片翻译",
+          "secret_id": "Secret ID",
+          "secret_key": "Secret Key"
+        },
+        "volcengine_ocr": {
+          "title": "火山 OCR",
+          "appid": "App ID",
+          "secret": "Secret"
+        },
+        "volcengine_multi_lang_ocr": {
+          "title": "火山 OCR (多语言)",
+          "appid": "App ID",
+          "secret": "Secret"
+        },
+        "qrcode": {
+          "title": "二维码识别"
+        }
+      },
+      "tts": {
+        "lingva_tts": {
+          "title": "Lingva",
+          "request_path": "请求地址"
+        }
+      },
+      "collection": {
+        "anki": {
+          "title": "Anki",
+          "port": "端口号"
+        },
+        "eudic": {
+          "title": "欧路词典",
+          "name": "生词本名称",
+          "token": "Token"
+        }
+      }
+    },
+    "translate": {
+      "translate": "翻译",
+      "add_collection_success": "添加成功",
+      "recognizing": "识别中…",
+      "speak": "朗读",
+      "copy": "复制",
+      "retry": "重试",
+      "delete_newline": "删除换行",
+      "translate_back": "翻译回原文"
+    },
+    "recognize": {
+      "recognize": "重新识别",
+      "translate": "翻译",
+      "copy_img": "复制图片",
+      "copy_text": "复制",
+      "delete_newline": "删除换行",
+      "delete_space": "删除空格"
+    },
+    "home": {
+      "title": "LightSync",
+      "subtitle": "轻量级跨设备文件同步工具，基于 WebDAV 协议实现高效、安全、可定制的文件同步",
+      "quickActions": {
+        "syncFolders": "同步文件夹",
+        "syncFoldersDesc": "配置和管理同步文件夹",
+        "webdavServers": "WebDAV 服务器",
+        "webdavServersDesc": "配置云端服务器连接",
+        "syncStatus": "同步状态",
+        "syncStatusDesc": "查看同步进度和历史记录",
+        "settings": "设置",
+        "settingsDesc": "应用配置和偏好设置"
+      },
+      "systemStatus": {
+        "title": "系统状态",
+        "activeSyncs": "活跃同步",
+        "syncedFiles": "已同步文件",
+        "transferred": "已传输数据"
+      },
+      "devTests": {
+        "title": "开发者测试"
+      }
     }
+  }
 }

@@ -57,3 +57,17 @@ export async function isProductionMode(): Promise<boolean> {
     return true
   }
 }
+
+/**
+ * 获取操作系统类型
+ * @returns Promise<string> 返回操作系统类型: "Windows", "Darwin", "Linux" 等
+ */
+export async function getOsType(): Promise<string> {
+  try {
+    const osType = await invoke<string>('get_os_type')
+    return osType
+  } catch (error) {
+    console.error('获取操作系统类型失败:', error)
+    throw error
+  }
+}
