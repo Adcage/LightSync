@@ -32,4 +32,5 @@ chrono = "0.4"
 url = "2.4"
 rusqlite = { version = "0.32", features = ["bundled"] }
 uuid = { version = "1.0", features = ["v4", "serde"] }
+keyring = "2.0"
 
