@@ -12,6 +12,7 @@ mod database;
 mod system;
 // WebDAV 模块
 mod webdav;
+use webdav::keyring;
 
 // 公开导出错误类型，供其他模块使用
 pub use error::{Result, SyncError};

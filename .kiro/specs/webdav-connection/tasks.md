@@ -29,7 +29,7 @@
     - 实现 delete_webdav_server
     - _Requirements: 1.3, 4.3, 5.2_
 
-  - [ ] 1.5 编写数据库操作单元测试
+  - [x] 1.5 编写数据库操作单元测试
     - 测试插入服务器配置
     - 测试查询服务器配置
     - 测试更新服务器配置
@@ -38,11 +38,11 @@
     - _Requirements: 1.3, 4.3, 5.2_
 
 - [ ] 2. Keyring 密码管理
-  - [ ] 2.1 添加 keyring 依赖
+  - [x] 2.1 添加 keyring 依赖
     - 在 Cargo.toml 中添加 keyring crate
     - _Requirements: 1.2_
 
-  - [ ] 2.2 创建 KeyringManager 模块
+  - [x] 2.2 创建 KeyringManager 模块
     - 创建 `src-tauri/src/webdav/keyring.rs`
     - 实现 save_password 函数
     - 实现 get_password 函数
@@ -50,7 +50,7 @@
     - 处理 keyring 不可用的情况
     - _Requirements: 1.2, 4.4, 5.3_
 
-  - [ ] 2.3 编写 Keyring 单元测试
+  - [x] 2.3 编写 Keyring 单元测试
     - 测试密码保存
     - 测试密码读取
     - 测试密码删除
@@ -60,26 +60,26 @@
     - _Requirements: 1.2, 4.4, 5.3_
 
 - [ ] 3. WebDAV 客户端实现
-  - [ ] 3.1 添加 WebDAV 相关依赖
+  - [x] 3.1 添加 WebDAV 相关依赖
     - 在 Cargo.toml 中添加 reqwest
     - 添加 url crate
     - _Requirements: 6.1, 6.2, 6.3_
 
-  - [ ] 3.2 创建 WebDavClient 结构体
+  - [x] 3.2 创建 WebDavClient 结构体
     - 创建 `src-tauri/src/webdav/client.rs`
     - 定义 WebDavClient 结构体
     - 实现 new 构造函数
     - 配置 HTTP 客户端(超时、认证)
     - _Requirements: 2.1, 6.1_
 
-  - [ ] 3.3 实现连接测试功能
+  - [x] 3.3 实现连接测试功能
     - 实现 test_connection 方法
     - 发送 PROPFIND 请求测试连接
     - 解析服务器响应
     - 检测服务器类型
     - _Requirements: 2.1, 2.2, 2.3_
 
-  - [ ] 3.4 实现基本文件操作
+  - [x] 3.4 实现基本文件操作
     - 实现 list 方法(列出文件)
     - 实现 upload 方法(上传文件)
     - 实现 download 方法(下载文件)

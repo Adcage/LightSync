@@ -4,12 +4,8 @@
 ///
 /// 模块结构:
 /// - db: 数据库 CRUD 操作
-/// - client: WebDAV 客户端实现 (Phase 2 后续任务)
-/// - keyring: 密码管理 (Phase 2 后续任务)
+/// - keyring: 密码管理
+/// - client: WebDAV 客户端实现
+pub mod client;
 pub mod db;
-
-// 重新导出常用类型
-pub use db::{
-    delete_webdav_server, get_webdav_server_by_id, get_webdav_servers, insert_webdav_server,
-    update_webdav_server,
-};
+pub mod keyring;

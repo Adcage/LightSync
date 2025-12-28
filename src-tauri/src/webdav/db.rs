@@ -336,13 +336,421 @@ pub async fn delete_webdav_server(app: AppHandle, server_id: &str) -> Result<()>
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
+    use std::path::PathBuf;
+    use uuid::Uuid;
 
-    // 注意: 这些测试需要在 Tauri 应用上下文中运行
-    // 实际的集成测试将在 Phase 2 的后续任务中实现
+    /// 创建测试用的临时数据库
+    fn create_test_db() -> (PathBuf, rusqlite::Connection) {
+        // 创建临时测试目录
+        let test_dir = std::env::temp_dir().join(format!("lightsync_test_{}", Uuid::new_v4()));
+        fs::create_dir_all(&test_dir).unwrap();
+
+        let db_path = test_dir.join("lightsync.db");
+
+        // 打开数据库连接
+        let conn = rusqlite::Connection::open(&db_path).expect("Failed to open database");
+
+        // 只执行 002 迁移（webdav_servers 表）
+        // 注意: 001 迁移使用 MySQL 语法，不兼容 SQLite
+        conn.execute_batch(include_str!("../../migrations/002_webdav_servers.sql"))
+            .expect("Failed to run migration 002");
+
+        (test_dir, conn)
+    }
+
+    /// 清理测试数据
+    fn cleanup_test_db(test_dir: PathBuf) {
+        let _ = fs::remove_dir_all(test_dir);
+    }
+
+    /// 创建测试用的服务器配置
+    fn create_test_config(id: &str) -> WebDavServerConfig {
+        let now = chrono::Utc::now().timestamp();
+        WebDavServerConfig {
+            id: id.to_string(),
+            name: format!("Test Server {}", id),
+            url: "https://example.com/webdav".to_string(),
+            username: "testuser".to_string(),
+            use_https: true,
+            timeout: 30,
+            last_test_at: None,
+            last_test_status: "unknown".to_string(),
+            last_test_error: None,
+            server_type: "generic".to_string(),
+            enabled: true,
+            created_at: now,
+            updated_at: now,
+        }
+    }
+
+    /// 直接插入服务器配置到数据库（用于测试）
+    fn insert_server_direct(
+        conn: &rusqlite::Connection,
+        config: &WebDavServerConfig,
+    ) -> rusqlite::Result<()> {
+        conn.execute(
+            "INSERT INTO webdav_servers (
+                id, name, url, username, use_https, timeout,
+                last_test_at, last_test_status, last_test_error,
+                server_type, enabled, created_at, updated_at
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
+            rusqlite::params![
+                config.id,
+                config.name,
+                config.url,
+                config.username,
+                config.use_https as i32,
+                config.timeout as i64,
+                config.last_test_at,
+                config.last_test_status,
+                config.last_test_error,
+                config.server_type,
+                config.enabled as i32,
+                config.created_at,
+                config.updated_at,
+            ],
+        )?;
+        Ok(())
+    }
+
+    /// 直接从数据库查询服务器配置（用于测试）
+    fn get_server_direct(
+        conn: &rusqlite::Connection,
+        id: &str,
+    ) -> rusqlite::Result<WebDavServerConfig> {
+        conn.query_row(
+            "SELECT id, name, url, username, use_https, timeout, last_test_at, last_test_status, 
+                    last_test_error, server_type, enabled, created_at, updated_at 
+             FROM webdav_servers WHERE id = ?1",
+            rusqlite::params![id],
+            |row| {
+                Ok(WebDavServerConfig {
+                    id: row.get(0)?,
+                    name: row.get(1)?,
+                    url: row.get(2)?,
+                    username: row.get(3)?,
+                    use_https: row.get::<_, i32>(4)? != 0,
+                    timeout: row.get::<_, i64>(5)? as u32,
+                    last_test_at: row.get(6)?,
+                    last_test_status: row.get(7)?,
+                    last_test_error: row.get(8)?,
+                    server_type: row.get(9)?,
+                    enabled: row.get::<_, i32>(10)? != 0,
+                    created_at: row.get(11)?,
+                    updated_at: row.get(12)?,
+                })
+            },
+        )
+    }
 
     #[test]
-    fn test_module_compiles() {
-        // 这个测试只是确保模块可以编译
-        assert!(true);
+    fn test_insert_server_config() {
+        let (test_dir, conn) = create_test_db();
+
+        // 创建测试配置
+        let config = create_test_config("test-insert-1");
+
+        // 插入服务器配置
+        let result = insert_server_direct(&conn, &config);
+        assert!(result.is_ok(), "Failed to insert server: {:?}", result);
+
+        // 验证插入成功
+        let fetched = get_server_direct(&conn, &config.id).unwrap();
+        assert_eq!(fetched.id, config.id);
+        assert_eq!(fetched.name, config.name);
+        assert_eq!(fetched.url, config.url);
+        assert_eq!(fetched.username, config.username);
+        assert_eq!(fetched.use_https, config.use_https);
+        assert_eq!(fetched.timeout, config.timeout);
+
+        cleanup_test_db(test_dir);
     }
+
+    #[test]
+    fn test_insert_duplicate_id_fails() {
+        let (test_dir, conn) = create_test_db();
+
+        // 创建测试配置
+        let config = create_test_config("test-duplicate-1");
+
+        // 第一次插入应该成功
+        let result1 = insert_server_direct(&conn, &config);
+        assert!(result1.is_ok());
+
+        // 第二次插入相同 ID 应该失败（主键约束）
+        let result2 = insert_server_direct(&conn, &config);
+        assert!(result2.is_err());
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_query_all_servers() {
+        let (test_dir, conn) = create_test_db();
+
+        // 插入多个服务器
+        let config1 = create_test_config("test-query-all-1");
+        let config2 = create_test_config("test-query-all-2");
+        let mut config3 = create_test_config("test-query-all-3");
+        config3.enabled = false;
+
+        insert_server_direct(&conn, &config1).unwrap();
+        insert_server_direct(&conn, &config2).unwrap();
+        insert_server_direct(&conn, &config3).unwrap();
+
+        // 查询所有服务器
+        let mut stmt = conn.prepare("SELECT COUNT(*) FROM webdav_servers").unwrap();
+        let count: i64 = stmt.query_row([], |row| row.get(0)).unwrap();
+        assert_eq!(count, 3);
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_query_enabled_servers_only() {
+        let (test_dir, conn) = create_test_db();
+
+        // 插入多个服务器
+        let config1 = create_test_config("test-query-enabled-1");
+        let config2 = create_test_config("test-query-enabled-2");
+        let mut config3 = create_test_config("test-query-enabled-3");
+        config3.enabled = false;
+
+        insert_server_direct(&conn, &config1).unwrap();
+        insert_server_direct(&conn, &config2).unwrap();
+        insert_server_direct(&conn, &config3).unwrap();
+
+        // 只查询启用的服务器
+        let mut stmt = conn
+            .prepare("SELECT COUNT(*) FROM webdav_servers WHERE enabled = 1")
+            .unwrap();
+        let count: i64 = stmt.query_row([], |row| row.get(0)).unwrap();
+        assert_eq!(count, 2);
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_query_server_by_id() {
+        let (test_dir, conn) = create_test_db();
+
+        // 插入服务器
+        let config = create_test_config("test-query-by-id-1");
+        insert_server_direct(&conn, &config).unwrap();
+
+        // 根据 ID 查询
+        let fetched = get_server_direct(&conn, &config.id).unwrap();
+        assert_eq!(fetched.id, config.id);
+        assert_eq!(fetched.name, config.name);
+        assert_eq!(fetched.url, config.url);
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_query_server_by_id_not_found() {
+        let (test_dir, conn) = create_test_db();
+
+        // 查询不存在的服务器
+        let result = get_server_direct(&conn, "non-existent-id");
+        assert!(result.is_err());
+        assert!(matches!(
+            result.unwrap_err(),
+            rusqlite::Error::QueryReturnedNoRows
+        ));
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_update_server_config() {
+        let (test_dir, conn) = create_test_db();
+
+        // 插入服务器
+        let config = create_test_config("test-update-1");
+        insert_server_direct(&conn, &config).unwrap();
+
+        // 更新配置
+        let now = chrono::Utc::now().timestamp();
+        conn.execute(
+            "UPDATE webdav_servers
+             SET name = ?1, url = ?2, timeout = ?3, updated_at = ?4
+             WHERE id = ?5",
+            rusqlite::params![
+                "Updated Server Name",
+                "https://updated.example.com/webdav",
+                60,
+                now,
+                config.id,
+            ],
+        )
+        .unwrap();
+
+        // 验证更新成功
+        let fetched = get_server_direct(&conn, &config.id).unwrap();
+        assert_eq!(fetched.name, "Updated Server Name");
+        assert_eq!(fetched.url, "https://updated.example.com/webdav");
+        assert_eq!(fetched.timeout, 60);
+        assert!(fetched.updated_at >= now);
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_update_server_not_found() {
+        let (test_dir, conn) = create_test_db();
+
+        // 尝试更新不存在的服务器
+        let result = conn.execute(
+            "UPDATE webdav_servers SET name = ?1 WHERE id = ?2",
+            rusqlite::params!["Updated Name", "non-existent-id"],
+        );
+
+        assert!(result.is_ok());
+        // 更新不存在的记录不会报错，但影响行数为 0
+        assert_eq!(result.unwrap(), 0);
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_delete_server_config() {
+        let (test_dir, conn) = create_test_db();
+
+        // 插入服务器
+        let config = create_test_config("test-delete-1");
+        insert_server_direct(&conn, &config).unwrap();
+
+        // 删除服务器
+        let result = conn.execute(
+            "DELETE FROM webdav_servers WHERE id = ?1",
+            rusqlite::params![config.id],
+        );
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1); // 删除了 1 行
+
+        // 验证服务器已被删除
+        let fetch_result = get_server_direct(&conn, &config.id);
+        assert!(fetch_result.is_err());
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_delete_server_not_found() {
+        let (test_dir, conn) = create_test_db();
+
+        // 尝试删除不存在的服务器
+        let result = conn.execute(
+            "DELETE FROM webdav_servers WHERE id = ?1",
+            rusqlite::params!["non-existent-id"],
+        );
+
+        assert!(result.is_ok());
+        // 删除不存在的记录不会报错，但影响行数为 0
+        assert_eq!(result.unwrap(), 0);
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_crud_operations_sequence() {
+        let (test_dir, conn) = create_test_db();
+
+        // 1. 插入
+        let config = create_test_config("test-crud-1");
+        insert_server_direct(&conn, &config).unwrap();
+
+        // 2. 查询
+        let fetched = get_server_direct(&conn, &config.id).unwrap();
+        assert_eq!(fetched.id, config.id);
+        assert_eq!(fetched.name, config.name);
+
+        // 3. 更新
+        let now = chrono::Utc::now().timestamp();
+        conn.execute(
+            "UPDATE webdav_servers SET name = ?1, updated_at = ?2 WHERE id = ?3",
+            rusqlite::params!["Updated Name", now, config.id],
+        )
+        .unwrap();
+
+        // 4. 验证更新
+        let fetched_again = get_server_direct(&conn, &config.id).unwrap();
+        assert_eq!(fetched_again.name, "Updated Name");
+        assert!(fetched_again.updated_at >= now);
+
+        // 5. 删除
+        conn.execute(
+            "DELETE FROM webdav_servers WHERE id = ?1",
+            rusqlite::params![config.id],
+        )
+        .unwrap();
+
+        // 6. 验证删除
+        let fetch_result = get_server_direct(&conn, &config.id);
+        assert!(fetch_result.is_err());
+
+        cleanup_test_db(test_dir);
+    }
+
+    #[test]
+    fn test_server_config_validation() {
+        // 测试配置验证逻辑
+        let config = create_test_config("test-validation-1");
+        assert!(config.validate().is_ok());
+
+        // 测试无效名称
+        let mut invalid_config = config.clone();
+        invalid_config.name = "".to_string();
+        assert!(invalid_config.validate().is_err());
+
+        // 测试无效 URL
+        let mut invalid_config = config.clone();
+        invalid_config.url = "invalid-url".to_string();
+        assert!(invalid_config.validate().is_err());
+
+        // 测试无效用户名
+        let mut invalid_config = config.clone();
+        invalid_config.username = "".to_string();
+        assert!(invalid_config.validate().is_err());
+
+        // 测试无效超时时间
+        let mut invalid_config = config.clone();
+        invalid_config.timeout = 0;
+        assert!(invalid_config.validate().is_err());
+
+        let mut invalid_config = config.clone();
+        invalid_config.timeout = 301;
+        assert!(invalid_config.validate().is_err());
+    }
+
+    #[test]
+    fn test_database_indexes() {
+        let (test_dir, conn) = create_test_db();
+
+        // 验证索引是否创建成功
+        let mut stmt = conn
+            .prepare(
+                "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='webdav_servers'",
+            )
+            .unwrap();
+
+        let indexes: Vec<String> = stmt
+            .query_map([], |row| row.get(0))
+            .unwrap()
+            .collect::<std::result::Result<Vec<_>, _>>()
+            .unwrap();
+
+        // 应该有两个索引
+        assert!(indexes.contains(&"idx_webdav_servers_enabled".to_string()));
+        assert!(indexes.contains(&"idx_webdav_servers_last_test_status".to_string()));
+
+        cleanup_test_db(test_dir);
+    }
+
+    // 注意: 外键约束测试需要等 Phase 5 实现 sync_folders 表后才能测试
+    // 届时将添加以下测试:
+    // - test_delete_server_with_foreign_key_constraint
+    // - test_foreign_key_prevents_deletion
 }
