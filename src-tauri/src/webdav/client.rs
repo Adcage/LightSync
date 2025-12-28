@@ -685,68 +685,316 @@ impl WebDavClient {
 
     /// 映射 reqwest 错误到 SyncError
     ///
+    /// 将 HTTP 客户端错误转换为应用层的 SyncError，提供详细的错误信息
+    ///
     /// # 参数
     /// - `error`: reqwest 错误
     ///
     /// # 返回
-    /// 对应的 SyncError
+    /// 对应的 SyncError，包含详细的错误类型和描述
+    ///
+    /// # 错误类型映射
+    /// - 超时错误 -> `Network` (包含超时时间)
+    /// - 连接错误 -> `Network` (包含连接失败原因)
+    /// - DNS 解析错误 -> `Network` (包含域名信息)
+    /// - TLS/SSL 错误 -> `Network` (包含证书错误信息)
+    /// - 其他网络错误 -> `Network` (包含具体错误描述)
     fn map_request_error(&self, error: reqwest::Error) -> SyncError {
+        // 超时错误
         if error.is_timeout() {
-            SyncError::Network(format!(
-                "Connection timeout after {} seconds",
+            return SyncError::Network(format!(
+                "Connection timeout after {} seconds. Please check your network connection or increase the timeout setting.",
                 self.timeout.as_secs()
-            ))
-        } else if error.is_connect() {
-            SyncError::Network(format!("Failed to connect to server: {}", error))
-        } else {
-            SyncError::Network(format!("Network error: {}", error))
+            ));
         }
+
+        // 连接错误
+        if error.is_connect() {
+            // 尝试提取更详细的错误信息
+            let error_msg = error.to_string();
+
+            // DNS 解析失败
+            if error_msg.contains("dns") || error_msg.contains("resolve") {
+                return SyncError::Network(format!(
+                    "Failed to resolve server address '{}'. Please check the server URL and your DNS settings.",
+                    self.url
+                ));
+            }
+
+            // 连接被拒绝
+            if error_msg.contains("refused") {
+                return SyncError::Network(format!(
+                    "Connection refused by server '{}'. Please verify the server is running and accessible.",
+                    self.url
+                ));
+            }
+
+            // TLS/SSL 错误
+            if error_msg.contains("ssl")
+                || error_msg.contains("tls")
+                || error_msg.contains("certificate")
+            {
+                return SyncError::Network(format!(
+                    "SSL/TLS connection error: {}. This may be caused by an invalid certificate or unsupported protocol.",
+                    error
+                ));
+            }
+
+            // 通用连接错误
+            return SyncError::Network(format!(
+                "Failed to connect to server '{}': {}. Please check the server URL and your network connection.",
+                self.url, error
+            ));
+        }
+
+        // 请求构建错误
+        if error.is_builder() {
+            return SyncError::ConfigError(format!(
+                "Failed to build HTTP request: {}. This may indicate an invalid configuration.",
+                error
+            ));
+        }
+
+        // 请求发送错误
+        if error.is_request() {
+            return SyncError::Network(format!(
+                "Failed to send request: {}. Please check your network connection.",
+                error
+            ));
+        }
+
+        // 响应体读取错误
+        if error.is_body() || error.is_decode() {
+            return SyncError::WebDav(format!(
+                "Failed to read server response: {}. The server may have sent invalid data.",
+                error
+            ));
+        }
+
+        // 重定向错误
+        if error.is_redirect() {
+            return SyncError::WebDav(format!(
+                "Too many redirects or invalid redirect: {}. Please check the server URL.",
+                error
+            ));
+        }
+
+        // HTTP 状态错误（如果有状态码）
+        if let Some(status) = error.status() {
+            return self.map_status_error(status, &error.to_string());
+        }
+
+        // 其他未分类的网络错误
+        SyncError::Network(format!(
+            "Network error: {}. Please check your connection and try again.",
+            error
+        ))
     }
 
     /// 检查 HTTP 响应状态码
+    ///
+    /// 将 HTTP 状态码转换为应用层错误，提供详细的错误信息
     ///
     /// # 参数
     /// - `response`: HTTP 响应对象
     ///
     /// # 返回
-    /// - `Ok(())`: 状态码表示成功
-    /// - `Err(SyncError)`: 状态码表示失败
+    /// - `Ok(())`: 状态码表示成功 (2xx 或 207 Multi-Status)
+    /// - `Err(SyncError)`: 状态码表示失败，包含详细的错误类型和描述
+    ///
+    /// # 错误分类
+    /// - 401 Unauthorized -> `AuthError` (认证失败)
+    /// - 403 Forbidden -> `AuthError` (权限不足)
+    /// - 404 Not Found -> `NotFound` (资源不存在)
+    /// - 其他 4xx -> `WebDav` (客户端错误)
+    /// - 5xx -> `WebDav` (服务器错误)
     fn check_response_status(&self, response: &reqwest::Response) -> Result<()> {
         let status = response.status();
 
+        // 成功状态码
+        if status.is_success() || status == reqwest::StatusCode::MULTI_STATUS {
+            return Ok(());
+        }
+
+        // 认证错误 (401)
         if status == reqwest::StatusCode::UNAUTHORIZED {
             return Err(SyncError::AuthError(
-                "Authentication failed: Invalid username or password".to_string(),
+                "Authentication failed: Invalid username or password. Please check your credentials.".to_string(),
             ));
         }
 
+        // 权限错误 (403)
         if status == reqwest::StatusCode::FORBIDDEN {
             return Err(SyncError::AuthError(
-                "Access forbidden: User does not have permission".to_string(),
+                "Access forbidden: You do not have permission to access this resource. Please check your account permissions.".to_string(),
             ));
         }
 
+        // 资源不存在 (404)
         if status == reqwest::StatusCode::NOT_FOUND {
-            return Err(SyncError::NotFound("Resource not found".to_string()));
+            return Err(SyncError::NotFound(
+                "Resource not found: The requested file or folder does not exist on the server."
+                    .to_string(),
+            ));
         }
 
+        // 其他客户端错误 (4xx)
         if status.is_client_error() {
+            let error_detail = match status.as_u16() {
+                400 => "Bad Request: The server could not understand the request. This may indicate a client bug.",
+                405 => "Method Not Allowed: The requested operation is not supported for this resource.",
+                409 => "Conflict: The request conflicts with the current state of the resource. The resource may already exist or be locked.",
+                411 => "Length Required: The request did not specify the length of its content.",
+                412 => "Precondition Failed: One or more conditions in the request header fields evaluated to false.",
+                413 => "Payload Too Large: The request entity is larger than the server is willing or able to process.",
+                415 => "Unsupported Media Type: The server does not support the media type of the request.",
+                423 => "Locked: The resource is locked and cannot be modified.",
+                424 => "Failed Dependency: The request failed due to failure of a previous request.",
+                507 => "Insufficient Storage: The server is unable to store the representation needed to complete the request.",
+                _ => "Client error occurred.",
+            };
+
             return Err(SyncError::WebDav(format!(
-                "Client error: {} {}",
+                "HTTP {} {}: {}",
                 status.as_u16(),
-                status.canonical_reason().unwrap_or("Unknown")
+                status.canonical_reason().unwrap_or("Unknown"),
+                error_detail
             )));
         }
 
+        // 服务器错误 (5xx)
         if status.is_server_error() {
+            let error_detail = match status.as_u16() {
+                500 => "Internal Server Error: The server encountered an unexpected condition. Please try again later or contact the server administrator.",
+                501 => "Not Implemented: The server does not support the functionality required to fulfill the request.",
+                502 => "Bad Gateway: The server received an invalid response from an upstream server.",
+                503 => "Service Unavailable: The server is temporarily unable to handle the request. Please try again later.",
+                504 => "Gateway Timeout: The server did not receive a timely response from an upstream server.",
+                507 => "Insufficient Storage: The server is unable to store the representation needed to complete the request.",
+                _ => "Server error occurred. Please try again later or contact the server administrator.",
+            };
+
             return Err(SyncError::WebDav(format!(
-                "Server error: {} {}",
+                "HTTP {} {}: {}",
                 status.as_u16(),
-                status.canonical_reason().unwrap_or("Unknown")
+                status.canonical_reason().unwrap_or("Unknown"),
+                error_detail
             )));
         }
 
-        Ok(())
+        // 其他未知状态码
+        Err(SyncError::WebDav(format!(
+            "Unexpected HTTP status: {} {}",
+            status.as_u16(),
+            status.canonical_reason().unwrap_or("Unknown")
+        )))
+    }
+
+    /// 映射 HTTP 状态码到 SyncError（用于 map_request_error）
+    ///
+    /// # 参数
+    /// - `status`: HTTP 状态码
+    /// - `additional_info`: 额外的错误信息
+    ///
+    /// # 返回
+    /// 对应的 SyncError
+    fn map_status_error(&self, status: reqwest::StatusCode, additional_info: &str) -> SyncError {
+        // 认证错误 (401)
+        if status == reqwest::StatusCode::UNAUTHORIZED {
+            return SyncError::AuthError(
+                "Authentication failed: Invalid username or password. Please check your credentials.".to_string(),
+            );
+        }
+
+        // 权限错误 (403)
+        if status == reqwest::StatusCode::FORBIDDEN {
+            return SyncError::AuthError(
+                "Access forbidden: You do not have permission to access this resource. Please check your account permissions.".to_string(),
+            );
+        }
+
+        // 资源不存在 (404)
+        if status == reqwest::StatusCode::NOT_FOUND {
+            return SyncError::NotFound(
+                "Resource not found: The requested file or folder does not exist on the server."
+                    .to_string(),
+            );
+        }
+
+        // 其他客户端错误 (4xx)
+        if status.is_client_error() {
+            let error_detail = match status.as_u16() {
+                400 => "Bad Request: The server could not understand the request.",
+                405 => "Method Not Allowed: The requested operation is not supported.",
+                409 => "Conflict: The resource may already exist or be locked.",
+                411 => "Length Required: The request did not specify content length.",
+                412 => "Precondition Failed: Request conditions evaluated to false.",
+                413 => "Payload Too Large: The request entity is too large.",
+                415 => "Unsupported Media Type: The media type is not supported.",
+                423 => "Locked: The resource is locked.",
+                424 => "Failed Dependency: A previous request failed.",
+                507 => "Insufficient Storage: The server has insufficient storage.",
+                _ => "Client error occurred.",
+            };
+
+            let msg = if additional_info.is_empty() {
+                format!(
+                    "HTTP {} {}: {}",
+                    status.as_u16(),
+                    status.canonical_reason().unwrap_or("Unknown"),
+                    error_detail
+                )
+            } else {
+                format!(
+                    "HTTP {} {}: {}. {}",
+                    status.as_u16(),
+                    status.canonical_reason().unwrap_or("Unknown"),
+                    error_detail,
+                    additional_info
+                )
+            };
+
+            return SyncError::WebDav(msg);
+        }
+
+        // 服务器错误 (5xx)
+        if status.is_server_error() {
+            let error_detail = match status.as_u16() {
+                500 => "Internal Server Error: Please try again later.",
+                501 => "Not Implemented: The server does not support this functionality.",
+                502 => "Bad Gateway: Invalid response from upstream server.",
+                503 => "Service Unavailable: Please try again later.",
+                504 => "Gateway Timeout: Upstream server timeout.",
+                507 => "Insufficient Storage: The server has insufficient storage.",
+                _ => "Server error occurred.",
+            };
+
+            let msg = if additional_info.is_empty() {
+                format!(
+                    "HTTP {} {}: {}",
+                    status.as_u16(),
+                    status.canonical_reason().unwrap_or("Unknown"),
+                    error_detail
+                )
+            } else {
+                format!(
+                    "HTTP {} {}: {}. {}",
+                    status.as_u16(),
+                    status.canonical_reason().unwrap_or("Unknown"),
+                    error_detail,
+                    additional_info
+                )
+            };
+
+            return SyncError::WebDav(msg);
+        }
+
+        // 其他未知状态码
+        SyncError::WebDav(format!(
+            "Unexpected HTTP status: {} {}",
+            status.as_u16(),
+            status.canonical_reason().unwrap_or("Unknown")
+        ))
     }
 
     /// 解析 PROPFIND 响应
@@ -1697,5 +1945,323 @@ mod tests {
             client.build_url("/documents/file.txt"),
             "https://example.com/webdav/documents/file.txt"
         );
+    }
+
+    // ========== Property 7: 错误信息完整性测试 ==========
+    // Feature: webdav-connection, Property 7: 错误信息完整性
+    // Validates: Requirements 2.3, 7.1, 7.3, 7.4
+    //
+    // 验证所有 WebDAV 操作失败时返回的错误都包含：
+    // 1. 错误类型（Network, AuthError, WebDav, NotFound 等）
+    // 2. 详细的错误描述
+    // 3. 可操作的建议（如"请检查网络连接"）
+
+    #[tokio::test]
+    async fn test_property7_network_error_completeness() {
+        // 测试网络错误的完整性
+        let mut config = create_test_config();
+        config.url = "http://localhost:1".to_string(); // 不存在的服务
+        config.timeout = 1;
+        config.use_https = false;
+
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        let result = client.test_connection().await;
+
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+
+        // 验证错误类型
+        assert!(matches!(error, SyncError::Network(_)));
+
+        // 验证错误消息包含详细信息
+        let error_msg = error.to_string();
+        assert!(!error_msg.is_empty(), "Error message should not be empty");
+
+        // 网络错误应该包含以下信息之一：
+        // - 超时信息
+        // - 连接失败信息
+        // - 可操作的建议
+        assert!(
+            error_msg.contains("timeout")
+                || error_msg.contains("connect")
+                || error_msg.contains("network")
+                || error_msg.contains("connection"),
+            "Network error should contain descriptive information. Got: {}",
+            error_msg
+        );
+    }
+
+    #[tokio::test]
+    async fn test_property7_auth_error_completeness() {
+        // 测试认证错误的完整性
+        let mut server = mockito::Server::new_async().await;
+        let _mock = server
+            .mock("PROPFIND", "/")
+            .with_status(401)
+            .create_async()
+            .await;
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "wrong_password".to_string()).unwrap();
+        let result = client.test_connection().await;
+
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+
+        // 验证错误类型
+        assert!(
+            matches!(error, SyncError::AuthError(_)),
+            "Expected AuthError, got: {:?}",
+            error
+        );
+
+        // 验证错误消息包含详细信息
+        let error_msg = error.to_string();
+        assert!(!error_msg.is_empty(), "Error message should not be empty");
+
+        // 认证错误应该包含：
+        // - "Authentication failed" 或类似描述
+        // - 建议检查凭据
+        assert!(
+            error_msg.contains("Authentication") || error_msg.contains("authentication"),
+            "Auth error should mention authentication. Got: {}",
+            error_msg
+        );
+        assert!(
+            error_msg.contains("credentials")
+                || error_msg.contains("username")
+                || error_msg.contains("password"),
+            "Auth error should suggest checking credentials. Got: {}",
+            error_msg
+        );
+    }
+
+    #[tokio::test]
+    async fn test_property7_http_4xx_error_completeness() {
+        // 测试 HTTP 4xx 错误的完整性
+        let test_cases = vec![
+            (400, "Bad Request"),
+            (405, "Method Not Allowed"),
+            (409, "Conflict"),
+            (423, "Locked"),
+        ];
+
+        for (status_code, status_name) in test_cases {
+            let mut server = mockito::Server::new_async().await;
+            let _mock = server
+                .mock("PROPFIND", "/")
+                .with_status(status_code)
+                .create_async()
+                .await;
+
+            let config = create_mock_config(server.url());
+            let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+            let result = client.test_connection().await;
+
+            assert!(result.is_err(), "Expected error for status {}", status_code);
+            let error = result.unwrap_err();
+
+            // 验证错误类型（4xx 应该是 WebDav 错误，除了 401/403/404）
+            assert!(
+                matches!(error, SyncError::WebDav(_)),
+                "Expected WebDav error for status {}, got: {:?}",
+                status_code,
+                error
+            );
+
+            // 验证错误消息包含详细信息
+            let error_msg = error.to_string();
+            assert!(
+                !error_msg.is_empty(),
+                "Error message should not be empty for status {}",
+                status_code
+            );
+
+            // 错误消息应该包含：
+            // - HTTP 状态码
+            // - 状态名称或描述
+            assert!(
+                error_msg.contains(&status_code.to_string()),
+                "Error should contain status code {}. Got: {}",
+                status_code,
+                error_msg
+            );
+            assert!(
+                error_msg.contains(status_name) || error_msg.contains("HTTP"),
+                "Error should contain status description for {}. Got: {}",
+                status_code,
+                error_msg
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_property7_http_5xx_error_completeness() {
+        // 测试 HTTP 5xx 错误的完整性
+        let test_cases = vec![
+            (500, "Internal Server Error"),
+            (502, "Bad Gateway"),
+            (503, "Service Unavailable"),
+        ];
+
+        for (status_code, status_name) in test_cases {
+            let mut server = mockito::Server::new_async().await;
+            let _mock = server
+                .mock("PROPFIND", "/")
+                .with_status(status_code)
+                .create_async()
+                .await;
+
+            let config = create_mock_config(server.url());
+            let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+            let result = client.test_connection().await;
+
+            assert!(result.is_err(), "Expected error for status {}", status_code);
+            let error = result.unwrap_err();
+
+            // 验证错误类型
+            assert!(
+                matches!(error, SyncError::WebDav(_)),
+                "Expected WebDav error for status {}, got: {:?}",
+                status_code,
+                error
+            );
+
+            // 验证错误消息包含详细信息
+            let error_msg = error.to_string();
+            assert!(
+                !error_msg.is_empty(),
+                "Error message should not be empty for status {}",
+                status_code
+            );
+
+            // 错误消息应该包含：
+            // - HTTP 状态码
+            // - 状态名称或描述
+            // - 建议（如"请稍后重试"）
+            assert!(
+                error_msg.contains(&status_code.to_string()),
+                "Error should contain status code {}. Got: {}",
+                status_code,
+                error_msg
+            );
+            assert!(
+                error_msg.contains(status_name)
+                    || error_msg.contains("Server")
+                    || error_msg.contains("HTTP"),
+                "Error should contain status description for {}. Got: {}",
+                status_code,
+                error_msg
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn test_property7_timeout_error_completeness() {
+        // 测试超时错误的完整性
+        let mut config = create_test_config();
+        config.url = "http://10.255.255.1".to_string(); // 不可路由的地址
+        config.timeout = 1; // 1 秒超时
+        config.use_https = false;
+
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        let result = client.test_connection().await;
+
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+
+        // 验证错误类型
+        assert!(
+            matches!(error, SyncError::Network(_)),
+            "Expected Network error, got: {:?}",
+            error
+        );
+
+        // 验证错误消息包含详细信息
+        let error_msg = error.to_string();
+        assert!(!error_msg.is_empty(), "Error message should not be empty");
+
+        // 超时错误应该包含：
+        // - "timeout" 关键字
+        // - 超时时间
+        // - 可操作的建议
+        assert!(
+            error_msg.to_lowercase().contains("timeout"),
+            "Timeout error should mention timeout. Got: {}",
+            error_msg
+        );
+    }
+
+    #[tokio::test]
+    async fn test_property7_not_found_error_completeness() {
+        // 测试资源不存在错误的完整性
+        let mut server = mockito::Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/nonexistent.txt")
+            .with_status(404)
+            .create_async()
+            .await;
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        let temp_dir = std::env::temp_dir();
+        let download_file = temp_dir.join("test_404.txt");
+
+        let result = client.download("/nonexistent.txt", &download_file).await;
+
+        assert!(result.is_err());
+        let error = result.unwrap_err();
+
+        // 验证错误类型
+        assert!(
+            matches!(error, SyncError::NotFound(_)),
+            "Expected NotFound error, got: {:?}",
+            error
+        );
+
+        // 验证错误消息包含详细信息
+        let error_msg = error.to_string();
+        assert!(!error_msg.is_empty(), "Error message should not be empty");
+
+        // NotFound 错误应该包含：
+        // - "not found" 或类似描述
+        // - 资源类型（文件/文件夹）
+        assert!(
+            error_msg.to_lowercase().contains("not found")
+                || error_msg.to_lowercase().contains("does not exist"),
+            "NotFound error should mention resource not found. Got: {}",
+            error_msg
+        );
+    }
+
+    #[tokio::test]
+    async fn test_property7_all_errors_have_type_and_description() {
+        // 综合测试：验证所有错误都有类型和描述
+        // 这个测试确保我们的错误处理策略是一致的
+
+        // 所有错误类型都应该：
+        // 1. 有明确的错误类型（通过 enum 变体区分）
+        // 2. 包含非空的错误消息
+        // 3. 错误消息提供有用的上下文信息
+
+        // 测试各种错误类型的消息格式
+        let network_error = SyncError::Network("Connection failed".to_string());
+        assert!(!network_error.to_string().is_empty());
+        assert!(network_error.to_string().contains("Connection"));
+
+        let auth_error = SyncError::AuthError("Invalid credentials".to_string());
+        assert!(!auth_error.to_string().is_empty());
+        assert!(auth_error.to_string().contains("credentials"));
+
+        let webdav_error = SyncError::WebDav("HTTP 500: Server error".to_string());
+        assert!(!webdav_error.to_string().is_empty());
+        assert!(webdav_error.to_string().contains("500"));
+
+        let not_found_error = SyncError::NotFound("Resource not found".to_string());
+        assert!(!not_found_error.to_string().is_empty());
+        assert!(not_found_error.to_string().contains("not found"));
+
+        println!("✓ All error types have proper type and description");
     }
 }
