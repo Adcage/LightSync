@@ -1,7 +1,7 @@
 /// LightSync 数据库类型定义模块
 ///
 /// 提供数据库表对应的数据结构
-/// 注意：数据库操作通过前端的 @tauri-apps/plugin-sql 执行
+/// 注意：数据库操作通过前端的 @tauri-apps/plugin-sql 执行s
 use serde::{Deserialize, Serialize};
 
 /// 文件元数据结构体
