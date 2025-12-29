@@ -5,119 +5,116 @@ fileMatchPattern: 'src-tauri/**/*.rs'
 
 # Backend Development Rules (Rust)
 
-你是精通 Rust、Tauri 2.0 的后端专家。编写高性能、安全、可维护的 Rust 代码，遵循 idiomatic Rust 和 LightSync 规范。
+精通 Rust、Tauri 2.0 的后端专家。编写高性能、安全、可维护的代码。
 
 ## 核心原则
 
-- **Idiomatic Rust**：符合 Rust 习惯用法，利用类型系统
-- **内存安全**：利用所有权系统，避免 unsafe
-- **性能优先**：内存 < 50MB，CPU < 10%，启动 < 2s
-- **错误处理**：使用 Result<T>，禁止 panic
-- **简洁可测**：最小修改，DRY 原则，完整测试
+- **Idiomatic Rust**：利用类型系统，避免 unsafe
+- **性能**：内存 < 50MB，CPU < 10%，启动 < 2s
+- **错误处理**：使用 Result<T>，禁止 unwrap/panic
+- **简洁可测**：最小修改，DRY，完整测试
 
 ## 命名规范
 
 **原则**：遵循 Rust 官方命名约定，提高代码可读性
 
 ```rust
-// 函数/变量: snake_case（Rust 标准）
-fn get_config_value(key: &str) -> Result<String> { }
-let is_valid = true;
+// 函数/变量: snake_case
+fn get_config(key: &str) -> Result<String> { }
 
 // 类型/结构体/Trait: PascalCase
 struct AppConfig { }
 enum SyncError { }
-trait ConfigManager { }
 
 // 常量: SCREAMING_SNAKE_CASE
-const MAX_RETRY_COUNT: u32 = 3;
+const MAX_RETRY: u32 = 3;
 
 // 模块: snake_case
 mod config_watcher;
 ```
 
-**参数类型选择**：
-
-- 只读字符串用 `&str`（避免分配）
-- 需要所有权用 `String`
-- 只读结构体用 `&T`（避免克隆）
-
-## 项目结构
-
-```
-src-tauri/src/
-├── main.rs          # 应用入口
-├── lib.rs           # 命令注册
-├── error.rs         # 统一错误处理
-├── config.rs        # 配置管理
-├── database.rs      # 数据库类型
-├── constants.rs     # 常量定义
-└── webdav/          # WebDAV 模块
-    ├── mod.rs       # 模块入口
-    ├── client.rs    # 客户端实现
-    └── db.rs        # 数据库操作
-```
+**参数类型**：只读用 `&str`/`&T`，需要所有权用 `String`/`T`
 
 **导入顺序**：标准库 → 外部 crate → 内部模块
 
-```rust
-use std::path::PathBuf;
-use serde::{Deserialize, Serialize};
-use crate::error::{Result, SyncError};
-```
-
 ## 错误处理
 
-**原则**：
+**规范**：
 
-- 所有可能失败的操作返回 `Result<T>`
+- 返回 `Result<T>`，禁止 `unwrap()`/`expect()`（测试除外）
 - 使用 `thiserror` 定义统一错误类型
-- 提供详细错误上下文（包含失败的值）
-- 禁止 `unwrap()`/`expect()`（测试除外）
-
-**何时定义新错误类型**：
-
-- 需要区分不同错误来源（配置、数据库、网络）
-- 需要自动转换（`#[from]`）
+- 提供详细上下文（包含失败的值）
 
 ```rust
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum SyncError {
-    #[error("Configuration error: {0}")]
+    #[error("Config error: {0}")]
     ConfigError(String),
 
-    #[error(transparent)]  // 自动转换 std::io::Error
+    #[error(transparent)]
     Io(#[from] std::io::Error),
 }
 
 pub type Result<T> = std::result::Result<T, SyncError>;
-```
 
-**错误传播**：
-
-- 简单传播用 `?`
-- 需要上下文用 `map_err`（包含失败的输入值）
-
-```rust
 // ✅ 使用 ? 传播
-async fn load_config(path: &Path) -> Result<AppConfig> {
+async fn load(path: &Path) -> Result<AppConfig> {
     let content = tokio::fs::read_to_string(path).await?;
     Ok(serde_json::from_str(&content)?)
 }
 
-// ✅ 添加上下文（包含失败的 URL）
+// ✅ 添加上下文
 fn parse_url(url: &str) -> Result<()> {
     url::Url::parse(url)
-        .map_err(|e| SyncError::ConfigError(
-            format!("Invalid URL '{}': {}", url, e)
-        ))?;
+        .map_err(|e| SyncError::ConfigError(format!("Invalid URL '{}': {}", url, e)))?;
     Ok(())
 }
 
 // ❌ 禁止：会导致 panic
 // let config = load_config().unwrap();
+```
+
+## 日志系统
+
+**使用 `tracing` 进行结构化日志**：
+
+- 生产代码使用 `tracing` 宏（info!, debug!, warn!, error!）
+
+**日志级别**：
+
+```rust
+use tracing::{info, debug, warn, error, instrument};
+
+// 日志级别
+error!(error = %e, "数据库连接失败");        // 严重错误
+warn!(timeout = %cfg.timeout, "超时设置较大"); // 警告
+info!(server_id = %id, "连接成功");          // 重要信息
+debug!(url = %url, "发起请求");              // 调试信息
+
+// 函数追踪（自动记录参数和返回值）
+#[instrument(skip(password))]  // 跳过敏感参数
+async fn test_connection(&self, password: &str) -> Result<String> {
+    info!("开始测试连接");
+    Ok("success".into())
+}
+
+// ✅ 结构化字段（便于分析）
+info!(server_id = %id, url = %url, timeout = cfg.timeout, "配置已加载");
+
+// ❌ 避免字符串拼接
+// info!("配置已加载: {} {}", id, url);
+```
+
+**敏感信息保护**：
+
+```rust
+#[instrument(skip(password))]  // 不记录密码
+async fn auth(user: &str, password: &str) -> Result<()> {
+    debug!(username = %user, "开始认证");
+    Ok(())
+}
 ```
 
 ## Tauri 命令
@@ -127,12 +124,13 @@ fn parse_url(url: &str) -> Result<()> {
 - 所有命令使用 `async`（即使不需要异步）
 - 返回 `Result<T>`（统一错误处理）
 - 在 `lib.rs` 中注册所有命令
+- 使用 `tracing` 记录关键操作
 
 ```rust
 #[tauri::command]
 async fn get_config(app: AppHandle) -> Result<AppConfig> {
     let store = app.store(CONFIG_STORE_FILE)
-        .map_err(|e| SyncError::ConfigError(format!("Store error: {}", e)))?;
+        .map_err(|e| SyncError::ConfigError(format!("Store: {}", e)))?;
 
     if let Some(value) = store.get("app_config") {
         return Ok(serde_json::from_value(value.clone())?);
@@ -149,7 +147,7 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 
 struct AppState {
-    config: Arc<Mutex<AppConfig>>,  // Arc: 多线程共享，Mutex: 互斥访问
+    config: Arc<Mutex<AppConfig>>,
 }
 
 #[tauri::command]
@@ -168,34 +166,30 @@ async fn get_state(state: State<'_, AppState>) -> Result<AppConfig> {
 
 ```rust
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]  // Rust snake_case → 前端 camelCase
+#[serde(rename_all = "camelCase")]  // snake_case → camelCase
 pub struct AppConfig {
     pub version: String,
     pub auto_start: bool,        // → autoStart
-    pub sync_folders: Vec<SyncFolder>,  // → syncFolders
+    pub sync_folders: Vec<SyncFolder>,
 }
 
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            version: "1.0.0".to_string(),
+            version: "1.0.0".into(),
             auto_start: false,
             sync_folders: Vec::new(),
         }
     }
 }
-```
 
-**验证逻辑**：在数据结构上实现，而非分散在各处
-
-```rust
 impl WebDavServerConfig {
     pub fn validate(&self) -> Result<()> {
         if self.name.trim().is_empty() {
-            return Err(SyncError::ConfigError("Name cannot be empty".into()));
+            return Err(SyncError::ConfigError("Name empty".into()));
         }
         if self.timeout < 1 || self.timeout > 300 {
-            return Err(SyncError::ConfigError("Timeout must be 1-300s".into()));
+            return Err(SyncError::ConfigError("Timeout 1-300s".into()));
         }
         Ok(())
     }
@@ -204,26 +198,21 @@ impl WebDavServerConfig {
 
 ## 异步编程
 
-**何时使用异步**：
+**何时使用**：I/O 操作、长时间任务、并发执行
 
-- I/O 操作（文件、网络、数据库）
-- 长时间运行的任务
-- 需要并发执行的操作
-
-**禁止在异步函数中使用阻塞操作**：
+**禁止阻塞操作**：
 
 - ❌ `std::fs::read()` → ✅ `tokio::fs::read()`
 - ❌ `std::thread::sleep()` → ✅ `tokio::time::sleep()`
 
-```rust
+````rust
 use tokio::{fs, time::{sleep, Duration}};
 
 async fn sync_file(path: &Path) -> Result<()> {
-    let content = fs::read(path).await?;  // 异步 I/O
-    sleep(Duration::from_secs(1)).await;  // 异步延迟
+    let content = fs::read(path).await?;
+    sleep(Duration::from_secs(1)).await;
     Ok(())
 }
-```
 
 **并发控制**：使用 `tokio::spawn` 处理多个任务
 
@@ -234,11 +223,11 @@ async fn sync_multiple(files: Vec<PathBuf>) -> Result<()> {
         .collect();
 
     for h in handles {
-        h.await??;  // 等待所有任务完成
+        h.await??;
     }
     Ok(())
 }
-```
+````
 
 ## 性能优化
 
@@ -290,6 +279,38 @@ let sum: i32 = vec![1,2,3,4,5]
 - 每个模块必须有测试
 - 测试覆盖：正常情况 + 错误情况 + 边界情况
 - 验证序列化（确保 camelCase）
+- **使用 `println!()` 输出测试信息**：清晰展示测试内容和结果
+
+**测试输出参考**：
+
+```rust
+#[tokio::test]
+async fn test_property_example() {
+    println!("\n========== 测试：功能描述 ==========");
+
+    // 1. 显示测试配置
+    println!("配置信息:");
+    println!("  - 参数1: {}", value1);
+    println!("  - 参数2: {}", value2);
+
+    // 2. 显示执行步骤
+    println!("\n开始测试...");
+    let result = some_operation().await;
+
+    // 3. 显示测试结果
+    println!("测试完成");
+    println!("  - 实际结果: {:?}", result);
+    println!("  - 验证状态: {}", if result.is_ok() { "✓" } else { "✗" });
+
+    // 4. 断言验证
+    assert!(result.is_ok());
+    println!("  - 断言通过: ✓");
+
+    println!("\n✅ 测试通过：功能正常工作");
+}
+```
+
+**基础测试示例**：
 
 ```rust
 #[cfg(test)]
@@ -298,28 +319,45 @@ mod tests {
 
     #[test]
     fn test_default() {
+        println!("\n测试：默认配置");
         let config = AppConfig::default();
+
+        println!("  - version: {}", config.version);
         assert_eq!(config.version, "1.0.0");
+
+        println!("  - auto_start: {}", config.auto_start);
         assert!(!config.auto_start);
+
+        println!("✓ 默认配置测试通过");
     }
 
     #[test]
     fn test_serialization() {
+        println!("\n测试：序列化（camelCase）");
         let config = AppConfig::default();
         let json = serde_json::to_string(&config).unwrap();
-        assert!(json.contains("autoStart"));  // 验证驼峰命名
+
+        println!("  - JSON: {}", json);
+        assert!(json.contains("autoStart"));
+        println!("✓ 包含 camelCase 字段");
     }
 
     #[test]
     fn test_validation_error() {
+        println!("\n测试：验证错误处理");
         let mut config = WebDavServerConfig::default();
         config.name = "".into();
-        assert!(config.validate().is_err());  // 验证错误处理
+
+        let result = config.validate();
+        println!("  - 空名称验证: {}", if result.is_err() { "拒绝 ✓" } else { "接受 ✗" });
+        assert!(result.is_err());
     }
 
-    #[tokio::test]  // 异步测试
+    #[tokio::test]
     async fn test_async() {
+        println!("\n测试：异步操作");
         let result = load_config("test.json").await;
+        println!("  - 加载结果: {}", if result.is_ok() { "成功 ✓" } else { "失败 ✗" });
         assert!(result.is_ok());
     }
 }
@@ -388,6 +426,15 @@ fn log_attempt(url: &str, user: &str) {
 }
 ```
 
+## 工具链
+
+```bash
+cd src-tauri
+cargo clippy      # 代码检查
+cargo fmt         # 格式化
+cargo test        # 运行测试
+```
+
 ## LightSync 规范
 
 ### 常量定义（constants.rs）
@@ -435,95 +482,10 @@ tauri_plugin_sql::Builder::new()
     .build()
 ```
 
-## 性能目标
-
-- 内存（空闲/同步）：< 30MB / < 50MB
-- CPU（空闲/同步）：< 1% / < 10%
-- 启动时间：< 2s
-
-## 工具链
-
-```bash
-cd src-tauri
-cargo clippy      # 代码检查
-cargo fmt         # 格式化
-cargo test        # 运行测试
-```
-
-## 设计模式
-
-### Builder 模式
-
-**何时使用**：构造函数参数 > 3 个，或有可选参数
-
-```rust
-pub struct WebDavClientBuilder {
-    url: String,
-    timeout: Option<u64>,
-}
-
-impl WebDavClientBuilder {
-    pub fn new(url: String) -> Self {
-        Self { url, timeout: None }
-    }
-
-    pub fn timeout(mut self, t: u64) -> Self {
-        self.timeout = Some(t);
-        self
-    }
-
-    pub fn build(self) -> Result<WebDavClient> {
-        Ok(WebDavClient { /* ... */ })
-    }
-}
-```
-
-### 类型状态模式
-
-**何时使用**：需要在编译时保证状态转换正确性
-
-```rust
-struct Disconnected;
-struct Connected;
-
-struct Client<S = Disconnected> {
-    url: String,
-    _state: PhantomData<S>,
-}
-
-impl Client<Disconnected> {
-    pub async fn connect(self) -> Result<Client<Connected>> {
-        Ok(Client { url: self.url, _state: PhantomData })
-    }
-}
-
-impl Client<Connected> {
-    pub async fn upload(&self, file: &Path) -> Result<()> {
-        // 只有连接后才能调用（编译时保证）
-        Ok(())
-    }
-}
-```
-
 ## 开发原则
 
-### 系统化流程
-
-1. 深入分析需求和约束
-2. 设计方案（错误处理、性能、安全）
-3. 实现代码（最佳实践 + 测试）
-4. 审查优化（clippy + 性能分析）
-5. 完善文档
-
-### 最小修改
-
+- 深入分析需求和约束
+- 设计方案（错误处理、性能、安全)
+- 实现代码（最 2s测试）
 - 只改必要部分，保持原有风格
-- 不重写整个文件
-- 优先复用现有逻辑
-
-### 第一性原理
-
-- 基于所有权/借用规则思考
-- 确保内存安全和线程安全
-- 避免不必要的复制/分配
-- 利用类型系统防止错误
+- 基于所有权/借用规则思考，利用类型系统防止错误
