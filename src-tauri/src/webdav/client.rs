@@ -247,7 +247,7 @@ impl WebDavClient {
 
         // 检查响应状态码
         let status = response.status();
-        println!("Response status: {}", status);
+        tracing::debug!(status = %status, "Response status");
 
         if status == reqwest::StatusCode::UNAUTHORIZED {
             return Err(SyncError::AuthError(
@@ -1099,9 +1099,13 @@ impl Display for WebDavClient {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::test_utils::init_test_logging;
 
     /// 创建测试用的服务器配置
     fn create_test_config() -> WebDavServerConfig {
+        init_test_logging(); // 初始化日志系统
+        use tracing::debug;
+
         let now = chrono::Utc::now().timestamp();
         let config = WebDavServerConfig {
             id: "test-id".to_string(),
@@ -1118,12 +1122,13 @@ mod tests {
             created_at: now,
             updated_at: now,
         };
-        println!("{:?}", config);
+        debug!(config = ?config, "创建测试配置");
         config
     }
 
     /// 创建使用 mock 服务器 URL 的配置
     fn create_mock_config(url: String) -> WebDavServerConfig {
+        init_test_logging(); // 初始化日志系统
         let now = chrono::Utc::now().timestamp();
         WebDavServerConfig {
             id: "test-id".to_string(),
@@ -1347,6 +1352,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_connection_success_generic() {
+        use tracing::info;
+
         let mut server = mockito::Server::new_async().await;
         let mock = server
             .mock("PROPFIND", "/")
@@ -1358,12 +1365,12 @@ mod tests {
             .create_async()
             .await;
 
-        println!("创建的mock服务器{}", server.url());
+        info!(mock_server_url = %server.url(), "创建的mock服务器");
         let config = create_mock_config(server.url());
         let client = WebDavClient::new(&config, "password".to_string()).unwrap();
 
         let result = client.test_connection().await;
-        println!("获取的返回结果{:?}", result);
+        info!(result = ?result, "获取的返回结果");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "generic");
         mock.assert_async().await;
@@ -2236,6 +2243,8 @@ mod tests {
 
     #[tokio::test]
     async fn test_property7_all_errors_have_type_and_description() {
+        use tracing::info;
+
         // 综合测试：验证所有错误都有类型和描述
         // 这个测试确保我们的错误处理策略是一致的
 
@@ -2261,7 +2270,7 @@ mod tests {
         assert!(!not_found_error.to_string().is_empty());
         assert!(not_found_error.to_string().contains("not found"));
 
-        println!("✓ All error types have proper type and description");
+        info!("✓ All error types have proper type and description");
     }
 
     // ========== Property 6: 连接超时机制测试 ==========
@@ -2273,7 +2282,9 @@ mod tests {
 
     #[tokio::test]
     async fn test_property6_connection_timeout_1_second() {
-        println!("\n========== Property 6 测试：1 秒超时 ==========");
+        use tracing::{debug, info};
+
+        info!("========== Property 6 测试：1 秒超时 ==========");
 
         // 测试 1 秒超时
         let mut config = create_test_config();
@@ -2281,28 +2292,25 @@ mod tests {
         config.timeout = 1; // 1 秒超时
         config.use_https = false;
 
-        println!("配置信息:");
-        println!("  - URL: {}", config.url);
-        println!("  - 超时设置: {} 秒", config.timeout);
-        println!("  - 使用 HTTPS: {}", config.use_https);
+        info!(
+            url = %config.url,
+            timeout_secs = config.timeout,
+            use_https = config.use_https,
+            "配置信息"
+        );
 
         let client = WebDavClient::new(&config, "password".to_string()).unwrap();
-        println!("✓ WebDavClient 创建成功");
+        info!("✓ WebDavClient 创建成功");
 
-        println!("\n开始测试连接...");
+        info!("开始测试连接...");
         let start = std::time::Instant::now();
         let result = client.test_connection().await;
         let elapsed = start.elapsed();
 
-        println!("连接测试完成");
-        println!("  - 实际耗时: {:.2} 秒", elapsed.as_secs_f64());
-        println!(
-            "  - 结果: {}",
-            if result.is_err() {
-                "失败 ✓"
-            } else {
-                "成功 ✗"
-            }
+        info!(
+            elapsed_secs = elapsed.as_secs_f64(),
+            success = result.is_ok(),
+            "连接测试完成"
         );
 
         // 验证操作失败
@@ -2311,8 +2319,7 @@ mod tests {
         // 验证是网络错误
         match result.unwrap_err() {
             SyncError::Network(msg) => {
-                println!("  - 错误类型: Network ✓");
-                println!("  - 错误消息: {}", msg);
+                debug!(error_type = "Network", error_msg = %msg, "错误信息");
 
                 // 验证错误消息提到超时
                 assert!(
@@ -2320,7 +2327,7 @@ mod tests {
                     "Error message should mention timeout. Got: {}",
                     msg
                 );
-                println!("  - 包含 'timeout' 关键字: ✓");
+                info!("✓ 包含 'timeout' 关键字");
 
                 // 验证错误消息包含超时时间
                 assert!(
@@ -2328,7 +2335,7 @@ mod tests {
                     "Error message should mention timeout duration. Got: {}",
                     msg
                 );
-                println!("  - 包含超时时间 '1 second': ✓");
+                info!("✓ 包含超时时间 '1 second'");
             }
             other => panic!("Expected Network error, got: {:?}", other),
         }
@@ -2340,14 +2347,16 @@ mod tests {
             "Operation should timeout around 1 second, but took {} seconds",
             elapsed.as_secs()
         );
-        println!("  - 超时时间在合理范围内 (1-3秒): ✓");
+        info!("✓ 超时时间在合理范围内 (1-3秒)");
 
-        println!("\n✅ Property 6 测试通过：1 秒超时机制正常工作");
+        info!("✅ Property 6 测试通过：1 秒超时机制正常工作");
     }
 
     #[tokio::test]
     async fn test_property6_connection_timeout_5_seconds() {
-        println!("\n========== Property 6 测试：5 秒超时 ==========");
+        use tracing::{debug, info};
+
+        info!("========== Property 6 测试：5 秒超时 ==========");
 
         // 测试 5 秒超时
         let mut config = create_test_config();
@@ -2355,27 +2364,24 @@ mod tests {
         config.timeout = 5; // 5 秒超时
         config.use_https = false;
 
-        println!("配置信息:");
-        println!("  - URL: {}", config.url);
-        println!("  - 超时设置: {} 秒", config.timeout);
+        info!(
+            url = %config.url,
+            timeout_secs = config.timeout,
+            "配置信息"
+        );
 
         let client = WebDavClient::new(&config, "password".to_string()).unwrap();
-        println!("✓ WebDavClient 创建成功");
+        info!("✓ WebDavClient 创建成功");
 
-        println!("\n开始测试连接（预计等待 5 秒）...");
+        info!("开始测试连接（预计等待 5 秒）...");
         let start = std::time::Instant::now();
         let result = client.test_connection().await;
         let elapsed = start.elapsed();
 
-        println!("连接测试完成");
-        println!("  - 实际耗时: {:.2} 秒", elapsed.as_secs_f64());
-        println!(
-            "  - 结果: {}",
-            if result.is_err() {
-                "失败 ✓"
-            } else {
-                "成功 ✗"
-            }
+        info!(
+            elapsed_secs = elapsed.as_secs_f64(),
+            success = result.is_ok(),
+            "连接测试完成"
         );
 
         // 验证操作失败
@@ -2384,22 +2390,21 @@ mod tests {
         // 验证是网络错误且提到超时
         match result.unwrap_err() {
             SyncError::Network(msg) => {
-                println!("  - 错误类型: Network ✓");
-                println!("  - 错误消息: {}", msg);
+                debug!(error_type = "Network", error_msg = %msg, "错误信息");
 
                 assert!(
                     msg.to_lowercase().contains("timeout"),
                     "Error message should mention timeout. Got: {}",
                     msg
                 );
-                println!("  - 包含 'timeout' 关键字: ✓");
+                info!("✓ 包含 'timeout' 关键字");
 
                 assert!(
                     msg.contains("5 second"),
                     "Error message should mention timeout duration. Got: {}",
                     msg
                 );
-                println!("  - 包含超时时间 '5 second': ✓");
+                info!("✓ 包含超时时间 '5 second'");
             }
             other => panic!("Expected Network error, got: {:?}", other),
         }
@@ -2410,14 +2415,16 @@ mod tests {
             "Operation should timeout around 5 seconds, but took {} seconds",
             elapsed.as_secs()
         );
-        println!("  - 超时时间在合理范围内 (5-7秒): ✓");
+        info!("✓ 超时时间在合理范围内 (5-7秒)");
 
-        println!("\n✅ Property 6 测试通过：5 秒超时机制正常工作");
+        info!("✅ Property 6 测试通过：5 秒超时机制正常工作");
     }
 
     #[tokio::test]
     async fn test_property6_different_operations_respect_timeout() {
-        println!("\n========== Property 6 测试：不同操作都遵守超时设置 ==========");
+        use tracing::info;
+
+        info!("========== Property 6 测试：不同操作都遵守超时设置 ==========");
 
         // 测试不同操作都遵守超时设置
         let mut config = create_test_config();
@@ -2425,73 +2432,68 @@ mod tests {
         config.timeout = 2; // 2 秒超时
         config.use_https = false;
 
-        println!("配置信息:");
-        println!("  - URL: {}", config.url);
-        println!("  - 超时设置: {} 秒", config.timeout);
+        info!(
+            url = %config.url,
+            timeout_secs = config.timeout,
+            "配置信息"
+        );
 
         let client = WebDavClient::new(&config, "password".to_string()).unwrap();
-        println!("✓ WebDavClient 创建成功\n");
+        info!("✓ WebDavClient 创建成功");
 
         // 测试 test_connection 操作
-        println!("测试 1/3: test_connection() 操作");
+        info!("测试 1/3: test_connection() 操作");
         let start = std::time::Instant::now();
         let result = client.test_connection().await;
         let elapsed = start.elapsed();
-        println!("  - 耗时: {:.2} 秒", elapsed.as_secs_f64());
-        println!(
-            "  - 结果: {}",
-            if result.is_err() {
-                "超时 ✓"
-            } else {
-                "成功 ✗"
-            }
+        info!(
+            operation = "test_connection",
+            elapsed_secs = elapsed.as_secs_f64(),
+            success = result.is_ok(),
+            "操作完成"
         );
         assert!(result.is_err());
         assert!(elapsed.as_secs() >= 2 && elapsed.as_secs() <= 4);
-        println!("  - 超时时间在合理范围内: ✓\n");
+        info!("✓ 超时时间在合理范围内");
 
         // 测试 list 操作
-        println!("测试 2/3: list() 操作");
+        info!("测试 2/3: list() 操作");
         let start = std::time::Instant::now();
         let result = client.list("/").await;
         let elapsed = start.elapsed();
-        println!("  - 耗时: {:.2} 秒", elapsed.as_secs_f64());
-        println!(
-            "  - 结果: {}",
-            if result.is_err() {
-                "超时 ✓"
-            } else {
-                "成功 ✗"
-            }
+        info!(
+            operation = "list",
+            elapsed_secs = elapsed.as_secs_f64(),
+            success = result.is_ok(),
+            "操作完成"
         );
         assert!(result.is_err());
         assert!(elapsed.as_secs() >= 2 && elapsed.as_secs() <= 4);
-        println!("  - 超时时间在合理范围内: ✓\n");
+        info!("✓ 超时时间在合理范围内");
 
         // 测试 mkdir 操作
-        println!("测试 3/3: mkdir() 操作");
+        info!("测试 3/3: mkdir() 操作");
         let start = std::time::Instant::now();
         let result = client.mkdir("/test").await;
         let elapsed = start.elapsed();
-        println!("  - 耗时: {:.2} 秒", elapsed.as_secs_f64());
-        println!(
-            "  - 结果: {}",
-            if result.is_err() {
-                "超时 ✓"
-            } else {
-                "成功 ✗"
-            }
+        info!(
+            operation = "mkdir",
+            elapsed_secs = elapsed.as_secs_f64(),
+            success = result.is_ok(),
+            "操作完成"
         );
         assert!(result.is_err());
         assert!(elapsed.as_secs() >= 2 && elapsed.as_secs() <= 4);
-        println!("  - 超时时间在合理范围内: ✓");
+        info!("✓ 超时时间在合理范围内");
 
-        println!("\n✅ Property 6 测试通过：所有操作都正确遵守超时设置");
+        info!("✅ Property 6 测试通过：所有操作都正确遵守超时设置");
     }
 
     #[tokio::test]
     async fn test_property6_timeout_prevents_long_wait() {
-        println!("\n========== Property 6 测试：超时机制防止长时间等待 ==========");
+        use tracing::{debug, info};
+
+        info!("========== Property 6 测试：超时机制防止长时间等待 ==========");
 
         // 测试超时机制能够防止长时间等待
         // 使用不可路由的地址来模拟慢速/无响应的服务器
@@ -2500,28 +2502,25 @@ mod tests {
         config.timeout = 2; // 2 秒超时
         config.use_https = false;
 
-        println!("测试场景: 使用不可路由的地址模拟无响应服务器");
-        println!("配置信息:");
-        println!("  - URL: {}", config.url);
-        println!("  - 超时设置: {} 秒", config.timeout);
+        info!(
+            scenario = "使用不可路由的地址模拟无响应服务器",
+            url = %config.url,
+            timeout_secs = config.timeout,
+            "测试场景和配置信息"
+        );
 
         let client = WebDavClient::new(&config, "password".to_string()).unwrap();
-        println!("✓ WebDavClient 创建成功");
+        info!("✓ WebDavClient 创建成功");
 
-        println!("\n开始测试连接...");
+        info!("开始测试连接...");
         let start = std::time::Instant::now();
         let result = client.test_connection().await;
         let elapsed = start.elapsed();
 
-        println!("连接测试完成");
-        println!("  - 实际耗时: {:.2} 秒", elapsed.as_secs_f64());
-        println!(
-            "  - 结果: {}",
-            if result.is_err() {
-                "超时失败 ✓"
-            } else {
-                "成功 ✗"
-            }
+        info!(
+            elapsed_secs = elapsed.as_secs_f64(),
+            success = result.is_ok(),
+            "连接测试完成"
         );
 
         // 验证操作因超时而失败
@@ -2530,15 +2529,14 @@ mod tests {
         // 验证是超时错误
         match result.unwrap_err() {
             SyncError::Network(msg) => {
-                println!("  - 错误类型: Network ✓");
-                println!("  - 错误消息: {}", msg);
+                debug!(error_type = "Network", error_msg = %msg, "错误信息");
 
                 assert!(
                     msg.to_lowercase().contains("timeout"),
                     "Error should mention timeout. Got: {}",
                     msg
                 );
-                println!("  - 包含 'timeout' 关键字: ✓");
+                info!("✓ 包含 'timeout' 关键字");
             }
             other => panic!("Expected Network timeout error, got: {:?}", other),
         }
@@ -2549,72 +2547,78 @@ mod tests {
             "Should timeout around 2 seconds. Took {} seconds",
             elapsed.as_secs()
         );
-        println!("  - 超时时间在合理范围内 (2-4秒): ✓");
-        println!("  - 成功防止了无限期等待: ✓");
+        info!("✓ 超时时间在合理范围内 (2-4秒)");
+        info!("✓ 成功防止了无限期等待");
 
-        println!("\n✅ Property 6 测试通过：超时机制有效防止长时间等待");
+        info!("✅ Property 6 测试通过：超时机制有效防止长时间等待");
     }
 
     #[tokio::test]
     async fn test_property6_timeout_boundary_values() {
-        println!("\n========== Property 6 测试：边界值测试 ==========");
+        use tracing::info;
+
+        info!("========== Property 6 测试：边界值测试 ==========");
 
         // 测试边界值：最小和最大超时时间
 
         // 测试最小超时时间 (1 秒)
-        println!("测试 1/2: 最小超时时间 (1 秒)");
+        info!("测试 1/2: 最小超时时间 (1 秒)");
         let mut config = create_test_config();
         config.url = "http://10.255.255.1".to_string();
         config.timeout = 1; // 最小值
         config.use_https = false;
 
-        println!("  - 配置超时: {} 秒", config.timeout);
+        info!(config_timeout_secs = config.timeout, "配置超时");
         let client = WebDavClient::new(&config, "password".to_string()).unwrap();
-        println!("  - 客户端超时设置: {} 秒", client.timeout().as_secs());
+        info!(
+            client_timeout_secs = client.timeout().as_secs(),
+            "客户端超时设置"
+        );
         assert_eq!(client.timeout(), Duration::from_secs(1));
-        println!("  - 超时配置验证: ✓");
+        info!("✓ 超时配置验证");
 
-        println!("  - 开始连接测试...");
+        info!("开始连接测试...");
         let start = std::time::Instant::now();
         let result = client.test_connection().await;
         let elapsed = start.elapsed();
 
-        println!("  - 实际耗时: {:.2} 秒", elapsed.as_secs_f64());
-        println!(
-            "  - 结果: {}",
-            if result.is_err() {
-                "超时 ✓"
-            } else {
-                "成功 ✗"
-            }
+        info!(
+            elapsed_secs = elapsed.as_secs_f64(),
+            success = result.is_ok(),
+            "连接测试完成"
         );
         assert!(result.is_err());
         assert!(elapsed.as_secs() >= 1 && elapsed.as_secs() <= 3);
-        println!("  - 超时时间在合理范围内 (1-3秒): ✓\n");
+        info!("✓ 超时时间在合理范围内 (1-3秒)");
 
         // 测试最大超时时间 (300 秒) - 但我们不会真的等 300 秒
         // 只验证客户端正确设置了超时值
-        println!("测试 2/2: 最大超时时间 (300 秒)");
+        info!("测试 2/2: 最大超时时间 (300 秒)");
         let mut config = create_test_config();
         config.timeout = 300; // 最大值
-        println!("  - 配置超时: {} 秒", config.timeout);
+        info!(config_timeout_secs = config.timeout, "配置超时");
 
         let client = WebDavClient::new(&config, "password".to_string()).unwrap();
-        println!("  - 客户端超时设置: {} 秒", client.timeout().as_secs());
+        info!(
+            client_timeout_secs = client.timeout().as_secs(),
+            "客户端超时设置"
+        );
         assert_eq!(client.timeout(), Duration::from_secs(300));
-        println!("  - 超时配置验证: ✓");
-        println!("  - 注意: 不实际等待 300 秒，仅验证配置正确性");
+        info!("✓ 超时配置验证");
+        info!("注意: 不实际等待 300 秒，仅验证配置正确性");
 
-        println!("\n✅ Property 6 测试通过：边界值（最小/最大超时）配置正确");
+        info!("✅ Property 6 测试通过：边界值（最小/最大超时）配置正确");
     }
 
     #[tokio::test]
     async fn test_property6_successful_connection_within_timeout() {
-        println!("\n========== Property 6 测试：成功连接在超时时间内完成 ==========");
+        use tracing::info;
+
+        info!("========== Property 6 测试：成功连接在超时时间内完成 ==========");
 
         // 测试成功连接（在超时时间内完成）
         let mut server = mockito::Server::new_async().await;
-        println!("✓ Mock 服务器创建成功: {}", server.url());
+        info!(mock_server_url = %server.url(), "✓ Mock 服务器创建成功");
 
         let mock = server
             .mock("PROPFIND", "/")
@@ -2622,36 +2626,33 @@ mod tests {
             .with_body(r#"<?xml version="1.0"?><d:multistatus xmlns:d="DAV:"></d:multistatus>"#)
             .create_async()
             .await;
-        println!("✓ Mock 端点配置完成 (PROPFIND /, 207 Multi-Status)");
+        info!("✓ Mock 端点配置完成 (PROPFIND /, 207 Multi-Status)");
 
         let mut config = create_mock_config(server.url());
         config.timeout = 5; // 5 秒超时
-        println!("\n配置信息:");
-        println!("  - URL: {}", config.url);
-        println!("  - 超时设置: {} 秒", config.timeout);
+        info!(
+            url = %config.url,
+            timeout_secs = config.timeout,
+            "配置信息"
+        );
 
         let client = WebDavClient::new(&config, "password".to_string()).unwrap();
-        println!("✓ WebDavClient 创建成功");
+        info!("✓ WebDavClient 创建成功");
 
-        println!("\n开始测试连接...");
+        info!("开始测试连接...");
         let start = std::time::Instant::now();
         let result = client.test_connection().await;
         let elapsed = start.elapsed();
 
-        println!("连接测试完成");
-        println!("  - 实际耗时: {:.3} 秒", elapsed.as_secs_f64());
-        println!(
-            "  - 结果: {}",
-            if result.is_ok() {
-                "成功 ✓"
-            } else {
-                "失败 ✗"
-            }
+        info!(
+            elapsed_secs = elapsed.as_secs_f64(),
+            success = result.is_ok(),
+            "连接测试完成"
         );
 
         // 验证操作成功
         assert!(result.is_ok(), "Expected successful connection");
-        println!("  - 连接成功验证: ✓");
+        info!("✓ 连接成功验证");
 
         // 验证操作在超时时间内完成（应该很快，远小于 5 秒）
         assert!(
@@ -2659,22 +2660,21 @@ mod tests {
             "Operation should complete quickly, took {} seconds",
             elapsed.as_secs()
         );
-        println!("  - 在超时时间内完成 (< 5秒): ✓");
-        println!(
-            "  - 响应速度: {} (远小于超时设置)",
-            if elapsed.as_millis() < 100 {
-                "极快"
-            } else if elapsed.as_millis() < 500 {
-                "快速"
-            } else {
-                "正常"
-            }
-        );
+        info!("✓ 在超时时间内完成 (< 5秒)");
+
+        let speed = if elapsed.as_millis() < 100 {
+            "极快"
+        } else if elapsed.as_millis() < 500 {
+            "快速"
+        } else {
+            "正常"
+        };
+        info!(response_speed = speed, "响应速度 (远小于超时设置)");
 
         mock.assert_async().await;
-        println!("  - Mock 服务器调用验证: ✓");
+        info!("✓ Mock 服务器调用验证");
 
-        println!("\n✅ Property 6 测试通过：成功连接在超时时间内快速完成");
+        info!("✅ Property 6 测试通过：成功连接在超时时间内快速完成");
     }
 
     // ========== 单元测试：URL 解析 ==========
@@ -2925,5 +2925,621 @@ mod tests {
             }
             _ => panic!("Expected ConfigError"),
         }
+    }
+
+    // ========== 集成测试：WebDAV 文件操作 ==========
+
+    // ========== Property 14: WebDAV 文件操作 Round-Trip ==========
+    // Feature: webdav-connection, Property 14: WebDAV 文件操作 Round-Trip
+    // Validates: Requirements 6.2, 6.3
+    //
+    // 验证对于任何随机生成的文件内容，上传到 WebDAV 服务器后再下载，
+    // 应该得到相同的文件内容
+
+    #[tokio::test]
+    async fn test_property14_upload_download_roundtrip_small_file() {
+        use tracing::info;
+
+        info!("========== Property 14 测试：小文件上传下载 Round-Trip ==========");
+
+        // 创建 mock 服务器
+        let mut server = mockito::Server::new_async().await;
+        info!(mock_server_url = %server.url(), "✓ Mock 服务器创建成功");
+
+        // 生成随机文件内容
+        let original_content = b"Hello, WebDAV! This is a test file.";
+        info!(content_size = original_content.len(), "✓ 生成测试内容");
+
+        // Mock 上传请求
+        let upload_mock = server
+            .mock("PUT", "/test_file.txt")
+            .with_status(201)
+            .create_async()
+            .await;
+        info!("✓ Mock 上传端点配置完成");
+
+        // Mock 下载请求
+        let download_mock = server
+            .mock("GET", "/test_file.txt")
+            .with_status(200)
+            .with_body(original_content.as_slice())
+            .create_async()
+            .await;
+        info!("✓ Mock 下载端点配置完成");
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        info!("✓ WebDavClient 创建成功");
+
+        // 创建临时文件
+        let temp_dir = std::env::temp_dir();
+        let upload_file = temp_dir.join("test_upload_roundtrip.txt");
+        let download_file = temp_dir.join("test_download_roundtrip.txt");
+
+        // 写入原始内容
+        tokio::fs::write(&upload_file, original_content)
+            .await
+            .unwrap();
+        info!(file_path = ?upload_file, "✓ 创建上传文件");
+
+        // 上传文件
+        info!("开始上传文件...");
+        let upload_result = client.upload(&upload_file, "/test_file.txt").await;
+        assert!(upload_result.is_ok(), "Upload should succeed");
+        info!("✓ 文件上传成功");
+
+        // 下载文件
+        info!("开始下载文件...");
+        let download_result = client.download("/test_file.txt", &download_file).await;
+        assert!(download_result.is_ok(), "Download should succeed");
+        info!("✓ 文件下载成功");
+
+        // 验证内容一致
+        let downloaded_content = tokio::fs::read(&download_file).await.unwrap();
+        info!(
+            original_size = original_content.len(),
+            downloaded_size = downloaded_content.len(),
+            "比较文件大小"
+        );
+        assert_eq!(
+            downloaded_content, original_content,
+            "Downloaded content should match original content"
+        );
+        info!("✓ 内容验证通过：上传和下载的内容完全一致");
+
+        // 清理
+        tokio::fs::remove_file(&upload_file).await.ok();
+        tokio::fs::remove_file(&download_file).await.ok();
+        info!("✓ 清理临时文件");
+
+        upload_mock.assert_async().await;
+        download_mock.assert_async().await;
+        info!("✓ Mock 服务器调用验证");
+
+        info!("✅ Property 14 测试通过：小文件 Round-Trip 成功");
+    }
+
+    #[tokio::test]
+    async fn test_property14_upload_download_roundtrip_binary_file() {
+        use tracing::info;
+
+        info!("========== Property 14 测试：二进制文件上传下载 Round-Trip ==========");
+
+        let mut server = mockito::Server::new_async().await;
+        info!(mock_server_url = %server.url(), "✓ Mock 服务器创建成功");
+
+        // 生成随机二进制内容（包含所有字节值）
+        let original_content: Vec<u8> = (0..=255).cycle().take(1024).collect();
+        info!(
+            content_size = original_content.len(),
+            "✓ 生成二进制测试内容（包含所有字节值 0-255）"
+        );
+
+        let upload_mock = server
+            .mock("PUT", "/binary_file.bin")
+            .with_status(201)
+            .create_async()
+            .await;
+
+        let download_mock = server
+            .mock("GET", "/binary_file.bin")
+            .with_status(200)
+            .with_body(original_content.clone())
+            .create_async()
+            .await;
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        let temp_dir = std::env::temp_dir();
+        let upload_file = temp_dir.join("test_binary_upload.bin");
+        let download_file = temp_dir.join("test_binary_download.bin");
+
+        tokio::fs::write(&upload_file, &original_content)
+            .await
+            .unwrap();
+        info!("✓ 创建二进制上传文件");
+
+        info!("开始上传二进制文件...");
+        let upload_result = client.upload(&upload_file, "/binary_file.bin").await;
+        assert!(upload_result.is_ok(), "Binary upload should succeed");
+        info!("✓ 二进制文件上传成功");
+
+        info!("开始下载二进制文件...");
+        let download_result = client.download("/binary_file.bin", &download_file).await;
+        assert!(download_result.is_ok(), "Binary download should succeed");
+        info!("✓ 二进制文件下载成功");
+
+        let downloaded_content = tokio::fs::read(&download_file).await.unwrap();
+        info!(
+            original_size = original_content.len(),
+            downloaded_size = downloaded_content.len(),
+            "比较文件大小"
+        );
+        assert_eq!(
+            downloaded_content, original_content,
+            "Binary content should be preserved exactly"
+        );
+        info!("✓ 二进制内容验证通过：所有字节完全一致");
+
+        tokio::fs::remove_file(&upload_file).await.ok();
+        tokio::fs::remove_file(&download_file).await.ok();
+
+        upload_mock.assert_async().await;
+        download_mock.assert_async().await;
+
+        info!("✅ Property 14 测试通过：二进制文件 Round-Trip 成功");
+    }
+
+    #[tokio::test]
+    async fn test_property14_upload_download_roundtrip_empty_file() {
+        use tracing::info;
+
+        info!("========== Property 14 测试：空文件上传下载 Round-Trip ==========");
+
+        let mut server = mockito::Server::new_async().await;
+
+        let original_content: Vec<u8> = vec![];
+        info!(content_size = original_content.len(), "✓ 生成空文件内容");
+
+        let upload_mock = server
+            .mock("PUT", "/empty_file.txt")
+            .with_status(201)
+            .create_async()
+            .await;
+
+        let download_mock = server
+            .mock("GET", "/empty_file.txt")
+            .with_status(200)
+            .with_body(original_content.clone())
+            .create_async()
+            .await;
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        let temp_dir = std::env::temp_dir();
+        let upload_file = temp_dir.join("test_empty_upload.txt");
+        let download_file = temp_dir.join("test_empty_download.txt");
+
+        tokio::fs::write(&upload_file, &original_content)
+            .await
+            .unwrap();
+
+        let upload_result = client.upload(&upload_file, "/empty_file.txt").await;
+        assert!(upload_result.is_ok(), "Empty file upload should succeed");
+
+        let download_result = client.download("/empty_file.txt", &download_file).await;
+        assert!(
+            download_result.is_ok(),
+            "Empty file download should succeed"
+        );
+
+        let downloaded_content = tokio::fs::read(&download_file).await.unwrap();
+        assert_eq!(
+            downloaded_content.len(),
+            0,
+            "Downloaded empty file should have zero length"
+        );
+        assert_eq!(
+            downloaded_content, original_content,
+            "Empty file content should match"
+        );
+        info!("✓ 空文件验证通过");
+
+        tokio::fs::remove_file(&upload_file).await.ok();
+        tokio::fs::remove_file(&download_file).await.ok();
+
+        upload_mock.assert_async().await;
+        download_mock.assert_async().await;
+
+        info!("✅ Property 14 测试通过：空文件 Round-Trip 成功");
+    }
+
+    // ========== Property 15: WebDAV 删除操作正确性 ==========
+    // Feature: webdav-connection, Property 15: WebDAV 删除操作正确性
+    // Validates: Requirements 6.4
+    //
+    // 验证对于任何上传到 WebDAV 服务器的文件，删除操作后该文件应该不再存在于服务器上
+
+    #[tokio::test]
+    async fn test_property15_delete_removes_file() {
+        use tracing::info;
+
+        info!("========== Property 15 测试：删除操作移除文件 ==========");
+
+        let mut server = mockito::Server::new_async().await;
+        info!(mock_server_url = %server.url(), "✓ Mock 服务器创建成功");
+
+        // Mock 上传请求
+        let upload_mock = server
+            .mock("PUT", "/file_to_delete.txt")
+            .with_status(201)
+            .create_async()
+            .await;
+        info!("✓ Mock 上传端点配置完成");
+
+        // Mock 删除请求
+        let delete_mock = server
+            .mock("DELETE", "/file_to_delete.txt")
+            .with_status(204) // No Content
+            .create_async()
+            .await;
+        info!("✓ Mock 删除端点配置完成");
+
+        // Mock 删除后的查询请求（应该返回 404）
+        let check_mock = server
+            .mock("GET", "/file_to_delete.txt")
+            .with_status(404)
+            .create_async()
+            .await;
+        info!("✓ Mock 验证端点配置完成（预期 404）");
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        // 创建并上传文件
+        let temp_dir = std::env::temp_dir();
+        let upload_file = temp_dir.join("test_delete_file.txt");
+        tokio::fs::write(&upload_file, b"This file will be deleted")
+            .await
+            .unwrap();
+        info!("✓ 创建测试文件");
+
+        info!("开始上传文件...");
+        let upload_result = client.upload(&upload_file, "/file_to_delete.txt").await;
+        assert!(upload_result.is_ok(), "Upload should succeed");
+        info!("✓ 文件上传成功");
+
+        // 删除文件
+        info!("开始删除文件...");
+        let delete_result = client.delete("/file_to_delete.txt").await;
+        assert!(delete_result.is_ok(), "Delete should succeed");
+        info!("✓ 文件删除成功");
+
+        // 验证文件不再存在（尝试下载应该失败）
+        info!("验证文件已被删除...");
+        let download_file = temp_dir.join("test_should_not_exist.txt");
+        let check_result = client.download("/file_to_delete.txt", &download_file).await;
+        assert!(
+            check_result.is_err(),
+            "File should not exist after deletion"
+        );
+        info!("✓ 验证通过：文件已不存在");
+
+        match check_result.unwrap_err() {
+            SyncError::NotFound(_) => {
+                info!("✓ 返回正确的 NotFound 错误");
+            }
+            other => panic!("Expected NotFound error, got: {:?}", other),
+        }
+
+        // 清理
+        tokio::fs::remove_file(&upload_file).await.ok();
+
+        upload_mock.assert_async().await;
+        delete_mock.assert_async().await;
+        check_mock.assert_async().await;
+        info!("✓ Mock 服务器调用验证");
+
+        info!("✅ Property 15 测试通过：删除操作正确移除文件");
+    }
+
+    #[tokio::test]
+    async fn test_property15_delete_nonexistent_file_fails() {
+        use tracing::info;
+
+        info!("========== Property 15 测试：删除不存在的文件应失败 ==========");
+
+        let mut server = mockito::Server::new_async().await;
+
+        // Mock 删除不存在的文件（返回 404）
+        let delete_mock = server
+            .mock("DELETE", "/nonexistent_file.txt")
+            .with_status(404)
+            .create_async()
+            .await;
+        info!("✓ Mock 删除端点配置完成（预期 404）");
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        info!("尝试删除不存在的文件...");
+        let delete_result = client.delete("/nonexistent_file.txt").await;
+        assert!(
+            delete_result.is_err(),
+            "Deleting nonexistent file should fail"
+        );
+        info!("✓ 删除操作正确失败");
+
+        match delete_result.unwrap_err() {
+            SyncError::NotFound(_) => {
+                info!("✓ 返回正确的 NotFound 错误");
+            }
+            other => panic!("Expected NotFound error, got: {:?}", other),
+        }
+
+        delete_mock.assert_async().await;
+
+        info!("✅ Property 15 测试通过：删除不存在的文件正确返回错误");
+    }
+
+    // ========== Property 16: WebDAV 文件夹创建正确性 ==========
+    // Feature: webdav-connection, Property 16: WebDAV 文件夹创建正确性
+    // Validates: Requirements 6.5
+    //
+    // 验证对于任何指定的远程路径，创建文件夹后该路径应该存在且为目录类型
+
+    #[tokio::test]
+    async fn test_property16_mkdir_creates_directory() {
+        use tracing::info;
+
+        info!("========== Property 16 测试：创建文件夹 ==========");
+
+        let mut server = mockito::Server::new_async().await;
+        info!(mock_server_url = %server.url(), "✓ Mock 服务器创建成功");
+
+        // Mock 创建文件夹请求
+        let mkdir_mock = server
+            .mock("MKCOL", "/new_folder")
+            .with_status(201) // Created
+            .create_async()
+            .await;
+        info!("✓ Mock 创建文件夹端点配置完成");
+
+        // Mock 验证文件夹存在的请求（PROPFIND）
+        let verify_mock = server
+            .mock("PROPFIND", "/new_folder")
+            .match_header("depth", "1") // list() 使用 depth: 1
+            .with_status(207)
+            .with_body(
+                r#"<?xml version="1.0"?>
+            <D:multistatus xmlns:D="DAV:">
+                <D:response>
+                    <D:href>/new_folder/</D:href>
+                    <D:propstat>
+                        <D:prop>
+                            <D:resourcetype><D:collection/></D:resourcetype>
+                        </D:prop>
+                    </D:propstat>
+                </D:response>
+            </D:multistatus>"#,
+            )
+            .create_async()
+            .await;
+        info!("✓ Mock 验证端点配置完成");
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        // 创建文件夹
+        info!("开始创建文件夹...");
+        let mkdir_result = client.mkdir("/new_folder").await;
+        assert!(mkdir_result.is_ok(), "Mkdir should succeed");
+        info!("✓ 文件夹创建成功");
+
+        // 验证文件夹存在且为目录类型
+        info!("验证文件夹存在...");
+        let list_result = client.list("/new_folder").await;
+        assert!(list_result.is_ok(), "Should be able to list the new folder");
+        info!("✓ 文件夹存在验证通过");
+
+        mkdir_mock.assert_async().await;
+        verify_mock.assert_async().await;
+        info!("✓ Mock 服务器调用验证");
+
+        info!("✅ Property 16 测试通过：文件夹创建成功");
+    }
+
+    #[tokio::test]
+    async fn test_property16_mkdir_nested_path() {
+        use tracing::info;
+
+        info!("========== Property 16 测试：创建嵌套路径文件夹 ==========");
+
+        let mut server = mockito::Server::new_async().await;
+
+        // Mock 创建嵌套文件夹
+        let mkdir_mock = server
+            .mock("MKCOL", "/parent/child/grandchild")
+            .with_status(201)
+            .create_async()
+            .await;
+        info!("✓ Mock 创建嵌套文件夹端点配置完成");
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        info!("开始创建嵌套文件夹...");
+        let mkdir_result = client.mkdir("/parent/child/grandchild").await;
+        assert!(mkdir_result.is_ok(), "Nested mkdir should succeed");
+        info!("✓ 嵌套文件夹创建成功");
+
+        mkdir_mock.assert_async().await;
+
+        info!("✅ Property 16 测试通过：嵌套路径文件夹创建成功");
+    }
+
+    #[tokio::test]
+    async fn test_property16_mkdir_already_exists_fails() {
+        use tracing::info;
+
+        info!("========== Property 16 测试：创建已存在的文件夹应失败 ==========");
+
+        let mut server = mockito::Server::new_async().await;
+
+        // Mock 创建已存在的文件夹（返回 405 Method Not Allowed）
+        let mkdir_mock = server
+            .mock("MKCOL", "/existing_folder")
+            .with_status(405)
+            .create_async()
+            .await;
+        info!("✓ Mock 端点配置完成（预期 405）");
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        info!("尝试创建已存在的文件夹...");
+        let mkdir_result = client.mkdir("/existing_folder").await;
+        assert!(
+            mkdir_result.is_err(),
+            "Creating existing folder should fail"
+        );
+        info!("✓ 创建操作正确失败");
+
+        match mkdir_result.unwrap_err() {
+            SyncError::WebDav(msg) => {
+                info!(error_msg = %msg, "✓ 返回正确的 WebDav 错误");
+                assert!(msg.contains("405"), "Error should mention status 405");
+            }
+            other => panic!("Expected WebDav error, got: {:?}", other),
+        }
+
+        mkdir_mock.assert_async().await;
+
+        info!("✅ Property 16 测试通过：创建已存在的文件夹正确返回错误");
+    }
+
+    // ========== 综合集成测试 ==========
+
+    #[tokio::test]
+    async fn test_integration_complete_workflow() {
+        use tracing::info;
+
+        info!("========== 综合集成测试：完整工作流 ==========");
+
+        let mut server = mockito::Server::new_async().await;
+        info!(mock_server_url = %server.url(), "✓ Mock 服务器创建成功");
+
+        // 1. 创建文件夹
+        let mkdir_mock = server
+            .mock("MKCOL", "/test_folder")
+            .with_status(201)
+            .create_async()
+            .await;
+
+        // 2. 上传文件到文件夹
+        let upload_mock = server
+            .mock("PUT", "/test_folder/document.txt")
+            .with_status(201)
+            .create_async()
+            .await;
+
+        // 3. 列出文件夹内容
+        let list_mock = server
+            .mock("PROPFIND", "/test_folder")
+            .match_header("depth", "1")
+            .with_status(207)
+            .with_body(
+                r#"<?xml version="1.0"?>
+            <D:multistatus xmlns:D="DAV:">
+                <D:response>
+                    <D:href>/test_folder/</D:href>
+                    <D:propstat>
+                        <D:prop>
+                            <D:resourcetype><D:collection/></D:resourcetype>
+                        </D:prop>
+                    </D:propstat>
+                </D:response>
+                <D:response>
+                    <D:href>/test_folder/document.txt</D:href>
+                    <D:propstat>
+                        <D:prop>
+                            <D:resourcetype/>
+                            <D:getcontentlength>1024</D:getcontentlength>
+                        </D:prop>
+                    </D:propstat>
+                </D:response>
+            </D:multistatus>"#,
+            )
+            .create_async()
+            .await;
+
+        // 4. 下载文件
+        let download_mock = server
+            .mock("GET", "/test_folder/document.txt")
+            .with_status(200)
+            .with_body(b"Test document content")
+            .create_async()
+            .await;
+
+        // 5. 删除文件
+        let delete_mock = server
+            .mock("DELETE", "/test_folder/document.txt")
+            .with_status(204)
+            .create_async()
+            .await;
+
+        let config = create_mock_config(server.url());
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        // 执行完整工作流
+        info!("步骤 1/5: 创建文件夹");
+        client.mkdir("/test_folder").await.unwrap();
+        info!("✓ 文件夹创建成功");
+
+        info!("步骤 2/5: 上传文件");
+        let temp_dir = std::env::temp_dir();
+        let upload_file = temp_dir.join("test_workflow_upload.txt");
+        tokio::fs::write(&upload_file, b"Test document content")
+            .await
+            .unwrap();
+        client
+            .upload(&upload_file, "/test_folder/document.txt")
+            .await
+            .unwrap();
+        info!("✓ 文件上传成功");
+
+        info!("步骤 3/5: 列出文件夹内容");
+        let files = client.list("/test_folder").await.unwrap();
+        assert_eq!(files.len(), 1, "Should have one file");
+        assert_eq!(files[0].name, "document.txt");
+        info!("✓ 文件列表获取成功");
+
+        info!("步骤 4/5: 下载文件");
+        let download_file = temp_dir.join("test_workflow_download.txt");
+        client
+            .download("/test_folder/document.txt", &download_file)
+            .await
+            .unwrap();
+        let content = tokio::fs::read_to_string(&download_file).await.unwrap();
+        assert_eq!(content, "Test document content");
+        info!("✓ 文件下载成功");
+
+        info!("步骤 5/5: 删除文件");
+        client.delete("/test_folder/document.txt").await.unwrap();
+        info!("✓ 文件删除成功");
+
+        // 清理
+        tokio::fs::remove_file(&upload_file).await.ok();
+        tokio::fs::remove_file(&download_file).await.ok();
+
+        mkdir_mock.assert_async().await;
+        upload_mock.assert_async().await;
+        list_mock.assert_async().await;
+        download_mock.assert_async().await;
+        delete_mock.assert_async().await;
+
+        info!("✅ 综合集成测试通过：完整工作流执行成功");
     }
 }

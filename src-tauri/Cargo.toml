@@ -43,3 +43,4 @@ dirs = "5.0"
 [dev-dependencies]
 mockito = "1.0"
 tracing-test = "0.2"
+ctor = "0.2"

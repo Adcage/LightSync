@@ -105,7 +105,7 @@
     - **Validates: Requirements 2.5, 7.5**
     - _Requirements: 2.5, 6.1, 7.5_
 
-  - [ ] 3.7 编写 WebDAV 操作集成测试
+  - [x] 3.7 编写 WebDAV 操作集成测试
     - 使用 mock 服务器测试连接
     - 测试文件上传下载
     - 测试文件删除

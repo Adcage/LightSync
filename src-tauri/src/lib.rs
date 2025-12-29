@@ -12,7 +12,10 @@ mod database;
 mod system;
 // WebDAV 模块
 mod webdav;
-use webdav::keyring;
+
+// 测试辅助模块（仅在测试时编译）
+#[cfg(test)]
+pub mod test_utils;
 
 // 公开导出错误类型，供其他模块使用
 pub use error::{Result, SyncError};
@@ -66,7 +69,7 @@ pub fn run() {
         )
         .setup(|app| {
             use tauri::Manager;
-            
+
             if let Some(window) = app.get_webview_window("main") {
                 #[cfg(target_os = "macos")]
                 {
@@ -74,7 +77,7 @@ pub fn run() {
                     let _ = window.set_title_bar_style(TitleBarStyle::Overlay);
                     let _ = window.set_title("");
                 }
-                
+
                 #[cfg(not(target_os = "macos"))]
                 {
                     let _ = window.set_decorations(false);
