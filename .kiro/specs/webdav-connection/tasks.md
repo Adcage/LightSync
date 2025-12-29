@@ -97,7 +97,7 @@
     - **Validates: Requirements 2.3, 7.1, 7.3, 7.4**
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5_
 
-  - [ ] 3.6 编写 WebDavClient 单元测试
+  - [x] 3.6 编写 WebDavClient 单元测试
     - 测试 URL 解析
     - 测试认证头构建
     - 测试超时机制
