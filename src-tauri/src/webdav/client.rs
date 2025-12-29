@@ -1103,7 +1103,6 @@ mod tests {
     /// 创建测试用的服务器配置
     fn create_test_config() -> WebDavServerConfig {
         let now = chrono::Utc::now().timestamp();
-        println!("测试1，当前时间：{}", now);
         let config = WebDavServerConfig {
             id: "test-id".to_string(),
             name: "Test Server".to_string(),
@@ -2263,5 +2262,668 @@ mod tests {
         assert!(not_found_error.to_string().contains("not found"));
 
         println!("✓ All error types have proper type and description");
+    }
+
+    // ========== Property 6: 连接超时机制测试 ==========
+    // Feature: webdav-connection, Property 6: 连接超时机制
+    // Validates: Requirements 2.5, 7.5
+    //
+    // 验证对于任何设置的超时时间，如果连接操作超过该时间，
+    // 应该终止连接并返回超时错误
+
+    #[tokio::test]
+    async fn test_property6_connection_timeout_1_second() {
+        println!("\n========== Property 6 测试：1 秒超时 ==========");
+
+        // 测试 1 秒超时
+        let mut config = create_test_config();
+        config.url = "http://10.255.255.1".to_string(); // 不可路由的地址，会触发超时
+        config.timeout = 1; // 1 秒超时
+        config.use_https = false;
+
+        println!("配置信息:");
+        println!("  - URL: {}", config.url);
+        println!("  - 超时设置: {} 秒", config.timeout);
+        println!("  - 使用 HTTPS: {}", config.use_https);
+
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        println!("✓ WebDavClient 创建成功");
+
+        println!("\n开始测试连接...");
+        let start = std::time::Instant::now();
+        let result = client.test_connection().await;
+        let elapsed = start.elapsed();
+
+        println!("连接测试完成");
+        println!("  - 实际耗时: {:.2} 秒", elapsed.as_secs_f64());
+        println!(
+            "  - 结果: {}",
+            if result.is_err() {
+                "失败 ✓"
+            } else {
+                "成功 ✗"
+            }
+        );
+
+        // 验证操作失败
+        assert!(result.is_err(), "Expected timeout error");
+
+        // 验证是网络错误
+        match result.unwrap_err() {
+            SyncError::Network(msg) => {
+                println!("  - 错误类型: Network ✓");
+                println!("  - 错误消息: {}", msg);
+
+                // 验证错误消息提到超时
+                assert!(
+                    msg.to_lowercase().contains("timeout"),
+                    "Error message should mention timeout. Got: {}",
+                    msg
+                );
+                println!("  - 包含 'timeout' 关键字: ✓");
+
+                // 验证错误消息包含超时时间
+                assert!(
+                    msg.contains("1 second"),
+                    "Error message should mention timeout duration. Got: {}",
+                    msg
+                );
+                println!("  - 包含超时时间 '1 second': ✓");
+            }
+            other => panic!("Expected Network error, got: {:?}", other),
+        }
+
+        // 验证实际耗时接近设置的超时时间（允许一定误差）
+        // 超时应该在 1-3 秒之间（考虑到系统调度和网络栈的延迟）
+        assert!(
+            elapsed.as_secs() >= 1 && elapsed.as_secs() <= 3,
+            "Operation should timeout around 1 second, but took {} seconds",
+            elapsed.as_secs()
+        );
+        println!("  - 超时时间在合理范围内 (1-3秒): ✓");
+
+        println!("\n✅ Property 6 测试通过：1 秒超时机制正常工作");
+    }
+
+    #[tokio::test]
+    async fn test_property6_connection_timeout_5_seconds() {
+        println!("\n========== Property 6 测试：5 秒超时 ==========");
+
+        // 测试 5 秒超时
+        let mut config = create_test_config();
+        config.url = "http://10.255.255.1".to_string(); // 不可路由的地址
+        config.timeout = 5; // 5 秒超时
+        config.use_https = false;
+
+        println!("配置信息:");
+        println!("  - URL: {}", config.url);
+        println!("  - 超时设置: {} 秒", config.timeout);
+
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        println!("✓ WebDavClient 创建成功");
+
+        println!("\n开始测试连接（预计等待 5 秒）...");
+        let start = std::time::Instant::now();
+        let result = client.test_connection().await;
+        let elapsed = start.elapsed();
+
+        println!("连接测试完成");
+        println!("  - 实际耗时: {:.2} 秒", elapsed.as_secs_f64());
+        println!(
+            "  - 结果: {}",
+            if result.is_err() {
+                "失败 ✓"
+            } else {
+                "成功 ✗"
+            }
+        );
+
+        // 验证操作失败
+        assert!(result.is_err(), "Expected timeout error");
+
+        // 验证是网络错误且提到超时
+        match result.unwrap_err() {
+            SyncError::Network(msg) => {
+                println!("  - 错误类型: Network ✓");
+                println!("  - 错误消息: {}", msg);
+
+                assert!(
+                    msg.to_lowercase().contains("timeout"),
+                    "Error message should mention timeout. Got: {}",
+                    msg
+                );
+                println!("  - 包含 'timeout' 关键字: ✓");
+
+                assert!(
+                    msg.contains("5 second"),
+                    "Error message should mention timeout duration. Got: {}",
+                    msg
+                );
+                println!("  - 包含超时时间 '5 second': ✓");
+            }
+            other => panic!("Expected Network error, got: {:?}", other),
+        }
+
+        // 验证实际耗时接近设置的超时时间
+        assert!(
+            elapsed.as_secs() >= 5 && elapsed.as_secs() <= 7,
+            "Operation should timeout around 5 seconds, but took {} seconds",
+            elapsed.as_secs()
+        );
+        println!("  - 超时时间在合理范围内 (5-7秒): ✓");
+
+        println!("\n✅ Property 6 测试通过：5 秒超时机制正常工作");
+    }
+
+    #[tokio::test]
+    async fn test_property6_different_operations_respect_timeout() {
+        println!("\n========== Property 6 测试：不同操作都遵守超时设置 ==========");
+
+        // 测试不同操作都遵守超时设置
+        let mut config = create_test_config();
+        config.url = "http://10.255.255.1".to_string(); // 不可路由的地址
+        config.timeout = 2; // 2 秒超时
+        config.use_https = false;
+
+        println!("配置信息:");
+        println!("  - URL: {}", config.url);
+        println!("  - 超时设置: {} 秒", config.timeout);
+
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        println!("✓ WebDavClient 创建成功\n");
+
+        // 测试 test_connection 操作
+        println!("测试 1/3: test_connection() 操作");
+        let start = std::time::Instant::now();
+        let result = client.test_connection().await;
+        let elapsed = start.elapsed();
+        println!("  - 耗时: {:.2} 秒", elapsed.as_secs_f64());
+        println!(
+            "  - 结果: {}",
+            if result.is_err() {
+                "超时 ✓"
+            } else {
+                "成功 ✗"
+            }
+        );
+        assert!(result.is_err());
+        assert!(elapsed.as_secs() >= 2 && elapsed.as_secs() <= 4);
+        println!("  - 超时时间在合理范围内: ✓\n");
+
+        // 测试 list 操作
+        println!("测试 2/3: list() 操作");
+        let start = std::time::Instant::now();
+        let result = client.list("/").await;
+        let elapsed = start.elapsed();
+        println!("  - 耗时: {:.2} 秒", elapsed.as_secs_f64());
+        println!(
+            "  - 结果: {}",
+            if result.is_err() {
+                "超时 ✓"
+            } else {
+                "成功 ✗"
+            }
+        );
+        assert!(result.is_err());
+        assert!(elapsed.as_secs() >= 2 && elapsed.as_secs() <= 4);
+        println!("  - 超时时间在合理范围内: ✓\n");
+
+        // 测试 mkdir 操作
+        println!("测试 3/3: mkdir() 操作");
+        let start = std::time::Instant::now();
+        let result = client.mkdir("/test").await;
+        let elapsed = start.elapsed();
+        println!("  - 耗时: {:.2} 秒", elapsed.as_secs_f64());
+        println!(
+            "  - 结果: {}",
+            if result.is_err() {
+                "超时 ✓"
+            } else {
+                "成功 ✗"
+            }
+        );
+        assert!(result.is_err());
+        assert!(elapsed.as_secs() >= 2 && elapsed.as_secs() <= 4);
+        println!("  - 超时时间在合理范围内: ✓");
+
+        println!("\n✅ Property 6 测试通过：所有操作都正确遵守超时设置");
+    }
+
+    #[tokio::test]
+    async fn test_property6_timeout_prevents_long_wait() {
+        println!("\n========== Property 6 测试：超时机制防止长时间等待 ==========");
+
+        // 测试超时机制能够防止长时间等待
+        // 使用不可路由的地址来模拟慢速/无响应的服务器
+        let mut config = create_test_config();
+        config.url = "http://10.255.255.1".to_string(); // 不可路由的地址
+        config.timeout = 2; // 2 秒超时
+        config.use_https = false;
+
+        println!("测试场景: 使用不可路由的地址模拟无响应服务器");
+        println!("配置信息:");
+        println!("  - URL: {}", config.url);
+        println!("  - 超时设置: {} 秒", config.timeout);
+
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        println!("✓ WebDavClient 创建成功");
+
+        println!("\n开始测试连接...");
+        let start = std::time::Instant::now();
+        let result = client.test_connection().await;
+        let elapsed = start.elapsed();
+
+        println!("连接测试完成");
+        println!("  - 实际耗时: {:.2} 秒", elapsed.as_secs_f64());
+        println!(
+            "  - 结果: {}",
+            if result.is_err() {
+                "超时失败 ✓"
+            } else {
+                "成功 ✗"
+            }
+        );
+
+        // 验证操作因超时而失败
+        assert!(result.is_err(), "Expected timeout error");
+
+        // 验证是超时错误
+        match result.unwrap_err() {
+            SyncError::Network(msg) => {
+                println!("  - 错误类型: Network ✓");
+                println!("  - 错误消息: {}", msg);
+
+                assert!(
+                    msg.to_lowercase().contains("timeout"),
+                    "Error should mention timeout. Got: {}",
+                    msg
+                );
+                println!("  - 包含 'timeout' 关键字: ✓");
+            }
+            other => panic!("Expected Network timeout error, got: {:?}", other),
+        }
+
+        // 验证实际耗时接近超时时间（2-4 秒之间，考虑系统延迟）
+        assert!(
+            elapsed.as_secs() >= 2 && elapsed.as_secs() <= 4,
+            "Should timeout around 2 seconds. Took {} seconds",
+            elapsed.as_secs()
+        );
+        println!("  - 超时时间在合理范围内 (2-4秒): ✓");
+        println!("  - 成功防止了无限期等待: ✓");
+
+        println!("\n✅ Property 6 测试通过：超时机制有效防止长时间等待");
+    }
+
+    #[tokio::test]
+    async fn test_property6_timeout_boundary_values() {
+        println!("\n========== Property 6 测试：边界值测试 ==========");
+
+        // 测试边界值：最小和最大超时时间
+
+        // 测试最小超时时间 (1 秒)
+        println!("测试 1/2: 最小超时时间 (1 秒)");
+        let mut config = create_test_config();
+        config.url = "http://10.255.255.1".to_string();
+        config.timeout = 1; // 最小值
+        config.use_https = false;
+
+        println!("  - 配置超时: {} 秒", config.timeout);
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        println!("  - 客户端超时设置: {} 秒", client.timeout().as_secs());
+        assert_eq!(client.timeout(), Duration::from_secs(1));
+        println!("  - 超时配置验证: ✓");
+
+        println!("  - 开始连接测试...");
+        let start = std::time::Instant::now();
+        let result = client.test_connection().await;
+        let elapsed = start.elapsed();
+
+        println!("  - 实际耗时: {:.2} 秒", elapsed.as_secs_f64());
+        println!(
+            "  - 结果: {}",
+            if result.is_err() {
+                "超时 ✓"
+            } else {
+                "成功 ✗"
+            }
+        );
+        assert!(result.is_err());
+        assert!(elapsed.as_secs() >= 1 && elapsed.as_secs() <= 3);
+        println!("  - 超时时间在合理范围内 (1-3秒): ✓\n");
+
+        // 测试最大超时时间 (300 秒) - 但我们不会真的等 300 秒
+        // 只验证客户端正确设置了超时值
+        println!("测试 2/2: 最大超时时间 (300 秒)");
+        let mut config = create_test_config();
+        config.timeout = 300; // 最大值
+        println!("  - 配置超时: {} 秒", config.timeout);
+
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        println!("  - 客户端超时设置: {} 秒", client.timeout().as_secs());
+        assert_eq!(client.timeout(), Duration::from_secs(300));
+        println!("  - 超时配置验证: ✓");
+        println!("  - 注意: 不实际等待 300 秒，仅验证配置正确性");
+
+        println!("\n✅ Property 6 测试通过：边界值（最小/最大超时）配置正确");
+    }
+
+    #[tokio::test]
+    async fn test_property6_successful_connection_within_timeout() {
+        println!("\n========== Property 6 测试：成功连接在超时时间内完成 ==========");
+
+        // 测试成功连接（在超时时间内完成）
+        let mut server = mockito::Server::new_async().await;
+        println!("✓ Mock 服务器创建成功: {}", server.url());
+
+        let mock = server
+            .mock("PROPFIND", "/")
+            .with_status(207)
+            .with_body(r#"<?xml version="1.0"?><d:multistatus xmlns:d="DAV:"></d:multistatus>"#)
+            .create_async()
+            .await;
+        println!("✓ Mock 端点配置完成 (PROPFIND /, 207 Multi-Status)");
+
+        let mut config = create_mock_config(server.url());
+        config.timeout = 5; // 5 秒超时
+        println!("\n配置信息:");
+        println!("  - URL: {}", config.url);
+        println!("  - 超时设置: {} 秒", config.timeout);
+
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+        println!("✓ WebDavClient 创建成功");
+
+        println!("\n开始测试连接...");
+        let start = std::time::Instant::now();
+        let result = client.test_connection().await;
+        let elapsed = start.elapsed();
+
+        println!("连接测试完成");
+        println!("  - 实际耗时: {:.3} 秒", elapsed.as_secs_f64());
+        println!(
+            "  - 结果: {}",
+            if result.is_ok() {
+                "成功 ✓"
+            } else {
+                "失败 ✗"
+            }
+        );
+
+        // 验证操作成功
+        assert!(result.is_ok(), "Expected successful connection");
+        println!("  - 连接成功验证: ✓");
+
+        // 验证操作在超时时间内完成（应该很快，远小于 5 秒）
+        assert!(
+            elapsed.as_secs() < 5,
+            "Operation should complete quickly, took {} seconds",
+            elapsed.as_secs()
+        );
+        println!("  - 在超时时间内完成 (< 5秒): ✓");
+        println!(
+            "  - 响应速度: {} (远小于超时设置)",
+            if elapsed.as_millis() < 100 {
+                "极快"
+            } else if elapsed.as_millis() < 500 {
+                "快速"
+            } else {
+                "正常"
+            }
+        );
+
+        mock.assert_async().await;
+        println!("  - Mock 服务器调用验证: ✓");
+
+        println!("\n✅ Property 6 测试通过：成功连接在超时时间内快速完成");
+    }
+
+    // ========== 单元测试：URL 解析 ==========
+
+    #[test]
+    fn test_url_parsing_with_trailing_slash() {
+        let config = create_test_config();
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        // URL 末尾有斜杠的情况
+        assert_eq!(
+            client.build_url("/documents"),
+            "https://example.com/webdav/documents"
+        );
+    }
+
+    #[test]
+    fn test_url_parsing_without_trailing_slash() {
+        let mut config = create_test_config();
+        config.url = "https://example.com/webdav".to_string(); // 无末尾斜杠
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        assert_eq!(
+            client.build_url("/documents"),
+            "https://example.com/webdav/documents"
+        );
+    }
+
+    #[test]
+    fn test_url_parsing_with_path_no_leading_slash() {
+        let config = create_test_config();
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        // 路径没有前导斜杠
+        assert_eq!(
+            client.build_url("documents"),
+            "https://example.com/webdav/documents"
+        );
+    }
+
+    #[test]
+    fn test_url_parsing_nested_paths() {
+        let config = create_test_config();
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        assert_eq!(
+            client.build_url("/documents/2024/report.pdf"),
+            "https://example.com/webdav/documents/2024/report.pdf"
+        );
+    }
+
+    #[test]
+    fn test_url_parsing_root_path() {
+        let config = create_test_config();
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        assert_eq!(client.build_url("/"), "https://example.com/webdav/");
+        assert_eq!(client.build_url(""), "https://example.com/webdav/");
+    }
+
+    #[test]
+    fn test_url_parsing_with_special_characters() {
+        let config = create_test_config();
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        // 注意：实际使用中，特殊字符应该被 URL 编码
+        // 这里只测试路径拼接逻辑
+        assert_eq!(
+            client.build_url("/documents/file with spaces.txt"),
+            "https://example.com/webdav/documents/file with spaces.txt"
+        );
+    }
+
+    // ========== 单元测试：认证头构建 ==========
+
+    #[test]
+    fn test_auth_header_construction() {
+        let config = create_test_config();
+        let password = "test_password".to_string();
+
+        // 创建客户端会构建认证头
+        let result = WebDavClient::new(&config, password);
+        assert!(
+            result.is_ok(),
+            "Should successfully create client with auth header"
+        );
+
+        // 验证客户端创建成功意味着认证头构建成功
+        let client = result.unwrap();
+        assert_eq!(client.username(), "testuser");
+    }
+
+    #[test]
+    fn test_auth_header_with_special_characters_in_username() {
+        let mut config = create_test_config();
+        config.username = "user@example.com".to_string(); // 包含 @ 符号
+        let password = "test_password".to_string();
+
+        let result = WebDavClient::new(&config, password);
+        assert!(
+            result.is_ok(),
+            "Should handle special characters in username"
+        );
+
+        let client = result.unwrap();
+        assert_eq!(client.username(), "user@example.com");
+    }
+
+    #[test]
+    fn test_auth_header_with_special_characters_in_password() {
+        let config = create_test_config();
+        let password = "p@ssw0rd!#$%".to_string(); // 包含特殊字符
+
+        let result = WebDavClient::new(&config, password);
+        assert!(
+            result.is_ok(),
+            "Should handle special characters in password"
+        );
+    }
+
+    #[test]
+    fn test_auth_header_with_unicode_characters() {
+        let config = create_test_config();
+        let password = "密码123".to_string(); // Unicode 字符
+
+        let result = WebDavClient::new(&config, password);
+        assert!(
+            result.is_ok(),
+            "Should handle Unicode characters in password"
+        );
+    }
+
+    #[test]
+    fn test_auth_header_with_long_credentials() {
+        let mut config = create_test_config();
+        config.username = "a".repeat(100); // 长用户名
+        let password = "b".repeat(100); // 长密码
+
+        let result = WebDavClient::new(&config, password);
+        assert!(result.is_ok(), "Should handle long credentials");
+    }
+
+    #[test]
+    fn test_auth_header_rejects_empty_password() {
+        let config = create_test_config();
+        let password = "".to_string();
+
+        let result = WebDavClient::new(&config, password);
+        assert!(result.is_err(), "Should reject empty password");
+
+        match result.unwrap_err() {
+            SyncError::ConfigError(msg) => {
+                assert!(msg.contains("Password cannot be empty"));
+            }
+            _ => panic!("Expected ConfigError"),
+        }
+    }
+
+    #[test]
+    fn test_auth_header_rejects_whitespace_only_password() {
+        let config = create_test_config();
+        let password = "   \t\n  ".to_string();
+
+        let result = WebDavClient::new(&config, password);
+        assert!(result.is_err(), "Should reject whitespace-only password");
+    }
+
+    // ========== 单元测试：超时机制配置 ==========
+
+    #[test]
+    fn test_timeout_configuration_default() {
+        let config = create_test_config(); // 默认 30 秒
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        assert_eq!(
+            client.timeout(),
+            Duration::from_secs(30),
+            "Default timeout should be 30 seconds"
+        );
+    }
+
+    #[test]
+    fn test_timeout_configuration_custom() {
+        let mut config = create_test_config();
+        config.timeout = 60;
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        assert_eq!(
+            client.timeout(),
+            Duration::from_secs(60),
+            "Custom timeout should be respected"
+        );
+    }
+
+    #[test]
+    fn test_timeout_configuration_minimum() {
+        let mut config = create_test_config();
+        config.timeout = 1; // 最小值
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        assert_eq!(
+            client.timeout(),
+            Duration::from_secs(1),
+            "Minimum timeout (1 second) should be accepted"
+        );
+    }
+
+    #[test]
+    fn test_timeout_configuration_maximum() {
+        let mut config = create_test_config();
+        config.timeout = 300; // 最大值
+        let client = WebDavClient::new(&config, "password".to_string()).unwrap();
+
+        assert_eq!(
+            client.timeout(),
+            Duration::from_secs(300),
+            "Maximum timeout (300 seconds) should be accepted"
+        );
+    }
+
+    #[test]
+    fn test_timeout_configuration_rejects_zero() {
+        let mut config = create_test_config();
+        config.timeout = 0; // 无效值
+
+        let result = WebDavClient::new(&config, "password".to_string());
+        assert!(result.is_err(), "Should reject zero timeout");
+
+        match result.unwrap_err() {
+            SyncError::ConfigError(msg) => {
+                assert!(msg.contains("Invalid server config"));
+            }
+            _ => panic!("Expected ConfigError"),
+        }
+    }
+
+    #[test]
+    fn test_timeout_configuration_rejects_too_large() {
+        let mut config = create_test_config();
+        config.timeout = 301; // 超过最大值
+
+        let result = WebDavClient::new(&config, "password".to_string());
+        assert!(result.is_err(), "Should reject timeout > 300 seconds");
+
+        match result.unwrap_err() {
+            SyncError::ConfigError(msg) => {
+                assert!(msg.contains("Invalid server config"));
+            }
+            _ => panic!("Expected ConfigError"),
+        }
     }
 }
