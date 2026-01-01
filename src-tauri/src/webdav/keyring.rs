@@ -315,7 +315,6 @@ mod tests {
     /// 对于任何服务器 ID 和密码，保存到 Keyring 后再读取应该得到相同的密码
     #[test]
     fn test_password_roundtrip() {
-        let server_id = generate_test_server_id();
         let test_passwords = vec![
             "simple-password".to_string(),
             "password-with-special-chars-!@#$%^&*()".to_string(),
@@ -325,6 +324,9 @@ mod tests {
         ];
 
         for password in test_passwords {
+            // 为每个密码生成新的 server_id
+            let server_id = generate_test_server_id();
+
             // 保存密码
             let save_result = KeyringManager::save_password(&server_id, &password);
             assert!(
