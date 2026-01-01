@@ -23,19 +23,6 @@ pub mod test_utils;
 // 公开导出错误类型，供其他模块使用
 pub use error::{Result, SyncError};
 
-// WebDAV 命令注册宏
-// 集中管理 WebDAV 相关命令，新增命令只需在此处添加
-macro_rules! webdav_commands {
-    () => {
-        commands::webdav::add_webdav_server,
-        commands::webdav::get_webdav_servers,
-        commands::webdav::get_webdav_server,
-        commands::webdav::update_webdav_server,
-        commands::webdav::delete_webdav_server,
-        commands::webdav::test_webdav_connection
-    };
-}
-
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
 fn greet(name: &str) -> String {
