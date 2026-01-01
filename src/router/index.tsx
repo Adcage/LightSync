@@ -1,12 +1,12 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import MainLayout from '../layouts/MainLayout'
-import HomePage from '../pages/HomePage'
-import DashboardPage from '../pages/DashboardPage'
-import ServersPage from '../pages/ServersPage'
-import SyncFoldersPage from '../pages/SyncFoldersPage'
-import LogsPage from '../pages/LogsPage'
-import SettingsPage from '../pages/SettingsPage'
-import AboutPage from '../pages/AboutPage'
+import MainLayout from '@/layouts/MainLayout'
+import HomePage from '@/pages/HomePage'
+import DashboardPage from '@/pages/DashboardPage'
+import ServersPage from '@/pages/ServersPage'
+import SyncFoldersPage from '@/pages/SyncFoldersPage'
+import LogsPage from '@/pages/LogsPage'
+import SettingsPage from '@/pages/SettingsPage'
+import AboutPage from '@/pages/AboutPage'
 
 const router = createBrowserRouter([
   {

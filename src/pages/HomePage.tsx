@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react'
 import { Card, CardBody, CardHeader } from '@nextui-org/react'
 import { useTranslation } from 'react-i18next'
 import { Activity, Cloud, FolderOpen, Settings } from 'lucide-react'
-import ConfigTest from '../components/ConfigTest'
-import DatabaseTest from '../components/DatabaseTest'
-import LanguageTest from '../components/LanguageTest'
-import { SystemInfo } from '../components/SystemInfo'
-import { DebugPanel } from '../components/DebugPanel'
-import { isDevelopmentMode } from '../utils/system.ts'
+import ConfigTest from '@/components/ConfigTest'
+import DatabaseTest from '@/components/DatabaseTest'
+import LanguageTest from '@/components/LanguageTest'
+import { SystemInfo } from '@/components/SystemInfo'
+import { DebugPanel } from '@/components/DebugPanel'
+import { isDevelopmentMode } from '@/utils/system.ts'
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation()

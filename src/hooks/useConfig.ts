@@ -14,7 +14,7 @@ import {
   setConfigValue,
   updateConfig,
   watchConfig,
-} from '../utils/store'
+} from '@/utils/store'
 import type {
   AppConfig,
   ConfigUpdate,
@@ -22,7 +22,7 @@ import type {
   SyncFolderUpdate,
   WebDavServerConfig,
   WebDavServerUpdate,
-} from '../types/config'
+} from '@/types/config'
 
 /**
  * 配置管理 Hook 返回类型

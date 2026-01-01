@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getOsType } from '../utils/system'
+import { getOsType } from '@/utils/system'
 import WindowControl from './WindowControl'
 
 export const TitleBar = () => {

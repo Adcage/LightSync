@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Button, Card, CardBody, CardHeader, Chip, Snippet } from '@nextui-org/react'
-import { getEnvironmentMode, getRuntimeEnvironment, isDevelopmentMode } from '../utils/system'
+import { getEnvironmentMode, getRuntimeEnvironment, isDevelopmentMode } from '@/utils/system'
 
 /**
  * 系统信息组件

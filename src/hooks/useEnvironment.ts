@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getEnvironmentMode, isDevelopmentMode, isProductionMode } from '../utils/system'
+import { getEnvironmentMode, isDevelopmentMode, isProductionMode } from '@/utils/system'
 
 /**
  * 环境模式 Hook

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { listen } from '@tauri-apps/api/event'
 import { Button } from '@nextui-org/react'
-import { getOsType } from '../utils/system'
+import { getOsType } from '@/utils/system'
 
 export default function WindowControl() {
   const [isMax, setIsMax] = useState(false)

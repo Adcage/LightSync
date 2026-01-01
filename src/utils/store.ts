@@ -6,7 +6,7 @@
 
 import { invoke } from '@tauri-apps/api/core'
 import { Store } from '@tauri-apps/plugin-store'
-import type { AppConfig, ConfigUpdate } from '../types/config'
+import type { AppConfig, ConfigUpdate } from '@/types/config'
 
 // 配置存储实例
 let storeInstance: Store | null = null

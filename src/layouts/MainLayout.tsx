@@ -3,12 +3,12 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import React from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation } from 'react-router-dom'
-import logoImage from '../assets/logo.png'
-import LanguageSwitch from '../components/LanguageSwitch'
-import Sidebar from '../components/Sidebar'
-import { ThemeSwitch } from '../components/ThemeSwitch'
-import WindowControl from '../components/WindowControl'
-import { osType } from '../utils/env'
+import logoImage from '@/assets/logo.png'
+import LanguageSwitch from '@/components/LanguageSwitch'
+import Sidebar from '@/components/Sidebar'
+import { ThemeSwitch } from '@/components/ThemeSwitch'
+import WindowControl from '@/components/WindowControl'
+import { osType } from '@/utils/env'
 
 const MainLayout: React.FC = () => {
   const { t } = useTranslation()

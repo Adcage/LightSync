@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { setConfigValue } from '../utils/store'
+import { setConfigValue } from '@/utils/store'
 
 export const useLanguage = () => {
   const { i18n } = useTranslation()
