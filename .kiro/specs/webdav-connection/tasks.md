@@ -182,14 +182,14 @@
     - 添加 JSDoc 注释
     - _Requirements: 7.1, 7.2, 7.3_
 
-- [ ] 6. 前端 Hook 实现
-  - [ ] 6.1 创建 useWebDavServers Hook
+- [-] 6. 前端 Hook 实现
+  - [x] 6.1 创建 useWebDavServers Hook
     - 创建 `src/hooks/useWebDavServers.ts`
     - 实现状态管理
     - 实现数据加载
     - _Requirements: 1.5, 3.1, 3.2_
 
-  - [ ] 6.2 实现 CRUD 操作方法
+  - [x] 6.2 实现 CRUD 操作方法
     - 实现 addServer 方法
     - 实现 updateServer 方法
     - 实现 removeServer 方法
@@ -199,13 +199,13 @@
     - **Validates: Requirements 1.5, 3.1, 5.4**
     - _Requirements: 1.5, 3.1, 4.1, 4.3, 5.2, 5.4_
 
-  - [ ] 6.3 实现加载和错误状态管理
+  - [x] 6.3 实现加载和错误状态管理
     - 管理 loading 状态
     - 管理 error 状态
     - 实现错误恢复
     - _Requirements: 2.4, 3.5, 10.3_
 
-  - [ ] 6.4 编写 Hook 单元测试
+  - [x] 6.4 编写 Hook 单元测试
     - 测试 CRUD 操作
     - 测试状态管理
     - 测试错误处理
