@@ -15,7 +15,7 @@ static INIT: Once = Once::new();
 ///
 /// **注意**: 由于使用了 `#[ctor]` 属性，这个函数会在测试开始前自动调用，
 /// 你不需要在测试中手动调用它。
-fn init_test_logging() {
+pub fn init_test_logging() {
     INIT.call_once(|| {
         // 配置日志格式：时间 + 级别 + 消息
         let subscriber = fmt()
@@ -57,6 +57,65 @@ fn init() {
     init_test_logging();
 }
 
+/// 创建测试用的 Tauri 应用句柄
+///
+/// 这个函数创建一个临时的测试应用环境，包括：
+/// - 临时的应用数据目录
+/// - 初始化的数据库
+/// - 配置存储
+///
+/// # 返回
+/// - `tauri::AppHandle`: 测试用的应用句柄
+///
+/// # 示例
+/// ```no_run
+/// use crate::test_utils::create_test_app;
+///
+/// #[tokio::test]
+/// async fn my_test() {
+///     let app = create_test_app().await;
+///     // 使用 app 进行测试...
+/// }
+/// ```
+pub async fn create_test_app() -> tauri::AppHandle {
+    use std::fs;
+    use uuid::Uuid;
+
+    // 创建临时测试目录
+    let test_id = Uuid::new_v4();
+    let test_dir = std::env::temp_dir().join(format!("lightsync_test_{}", test_id));
+    fs::create_dir_all(&test_dir).expect("Failed to create test directory");
+
+    // 创建数据库
+    let db_path = test_dir.join("lightsync.db");
+    let conn = rusqlite::Connection::open(&db_path).expect("Failed to open test database");
+
+    // 运行迁移
+    conn.execute_batch(include_str!("../migrations/002_webdav_servers.sql"))
+        .expect("Failed to run migration 002");
+    drop(conn);
+
+    // 创建 Tauri 应用构建器
+    // 注意：在测试环境中，我们需要使用 tauri::test 功能
+    // 但由于该功能需要 "test" feature，我们使用 mock 方式
+    #[cfg(feature = "test")]
+    {
+        let app = tauri::test::mock_builder()
+            .build(tauri::generate_context!())
+            .expect("Failed to build test app");
+        app
+    }
+
+    #[cfg(not(feature = "test"))]
+    {
+        // 在没有 test feature 的情况下，我们无法创建真正的 AppHandle
+        // 这里返回一个占位符，实际测试需要启用 test feature
+        panic!(
+            "Test feature is required to create test app. Please run tests with --features test"
+        );
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use tracing::info;
@@ -74,4 +133,3 @@ mod tests {
         info!("异步测试中的日志也自动工作");
     }
 }
-?

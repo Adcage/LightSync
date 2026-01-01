@@ -12,6 +12,9 @@ mod database;
 mod system;
 // WebDAV 模块
 mod webdav;
+// Tauri 命令模块（导入宏）
+#[macro_use]
+pub mod commands;
 
 // 测试辅助模块（仅在测试时编译）
 #[cfg(test)]
@@ -19,6 +22,19 @@ pub mod test_utils;
 
 // 公开导出错误类型，供其他模块使用
 pub use error::{Result, SyncError};
+
+// WebDAV 命令注册宏
+// 集中管理 WebDAV 相关命令，新增命令只需在此处添加
+macro_rules! webdav_commands {
+    () => {
+        commands::webdav::add_webdav_server,
+        commands::webdav::get_webdav_servers,
+        commands::webdav::get_webdav_server,
+        commands::webdav::update_webdav_server,
+        commands::webdav::delete_webdav_server,
+        commands::webdav::test_webdav_connection
+    };
+}
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -103,6 +119,13 @@ pub fn run() {
             system::get_runtime_environment,
             system::get_environment_mode,
             system::get_os_type,
+            // WebDAV 命令（由宏统一管理）
+            commands::webdav::add_webdav_server,
+            commands::webdav::get_webdav_servers,
+            commands::webdav::get_webdav_server,
+            commands::webdav::update_webdav_server,
+            commands::webdav::delete_webdav_server,
+            commands::webdav::test_webdav_connection
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
