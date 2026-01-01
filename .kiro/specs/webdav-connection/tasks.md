@@ -117,12 +117,12 @@
     - _Requirements: 6.2, 6.3, 6.4, 6.5_
 
 - [ ] 4. Tauri 命令层
-  - [ ] 4.1 创建 WebDAV 命令模块
+  - [x] 4.1 创建 WebDAV 命令模块
     - 创建 `src-tauri/src/commands/webdav.rs`
     - 导出命令模块
     - _Requirements: 1.3, 2.1_
 
-  - [ ] 4.2 实现服务器配置 CRUD 命令
+  - [x] 4.2 实现服务器配置 CRUD 命令
     - 实现 add_webdav_server 命令
     - 实现 get_webdav_servers 命令
     - 实现 get_webdav_server 命令
@@ -134,7 +134,7 @@
     - **Validates: Requirements 1.3, 1.4, 4.3, 5.2, 5.3**
     - _Requirements: 1.3, 1.4, 1.5, 4.3, 5.2, 5.3_
 
-  - [ ] 4.3 实现连接测试命令
+  - [x] 4.3 实现连接测试命令
     - 实现 test_webdav_connection 命令
     - 从数据库读取服务器配置
     - 从 Keyring 读取密码
@@ -142,7 +142,7 @@
     - 更新数据库中的测试状态
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 4.4 实现删除保护逻辑
+  - [x] 4.4 实现删除保护逻辑
     - 检查服务器是否被 sync_folders 使用
     - 如果被使用则拒绝删除
     - 返回适当的错误信息
@@ -150,24 +150,24 @@
     - **Validates: Requirements 5.5**
     - _Requirements: 5.5_
 
-  - [ ] 4.5 在 lib.rs 中注册所有命令
+  - [x] 4.5 在 lib.rs 中注册所有命令
     - 注册 WebDAV 相关命令
     - 更新 invoke_handler
     - _Requirements: 1.3, 2.1_
 
-  - [ ] 4.6 编写 Tauri 命令集成测试
+  - [x] 4.6 编写 Tauri 命令集成测试
     - 测试命令调用
     - 测试参数传递
     - 测试错误序列化
     - _Requirements: 1.3, 2.1, 5.2_
 
-- [ ] 5. 前端工具函数
-  - [ ] 5.1 创建 WebDAV 工具模块
+- [x] 5. 前端工具函数
+  - [x] 5.1 创建 WebDAV 工具模块
     - 创建 `src/utils/webdav.ts`
     - 封装 Tauri 命令调用
     - _Requirements: 1.3, 2.1_
 
-  - [ ] 5.2 实现服务器配置 API 函数
+  - [x] 5.2 实现服务器配置 API 函数
     - 实现 addWebDavServer
     - 实现 getWebDavServers
     - 实现 getWebDavServer
@@ -176,7 +176,7 @@
     - 实现 testWebDavConnection
     - _Requirements: 1.3, 1.5, 2.1, 4.3, 5.2_
 
-  - [ ] 5.3 实现错误处理和类型定义
+  - [x] 5.3 实现错误处理和类型定义
     - 定义 TypeScript 接口
     - 实现错误处理逻辑
     - 添加 JSDoc 注释
