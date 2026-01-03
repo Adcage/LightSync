@@ -12,6 +12,8 @@ pub mod database;
 mod system;
 // WebDAV 模块（公开以供测试使用）
 pub mod webdav;
+// 文件系统监控模块
+pub mod file_watcher;
 // Tauri 命令模块（导入宏）
 #[macro_use]
 pub mod commands;

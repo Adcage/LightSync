@@ -39,8 +39,10 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
 dirs = "5.0"
+glob = "0.3"
 
 [dev-dependencies]
 mockito = "1.0"
 tracing-test = "0.2"
 ctor = "0.2"
+proptest = "1.0"
