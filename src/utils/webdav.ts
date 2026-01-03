@@ -127,21 +127,20 @@ export interface UpdateServerInput {
  */
 export async function addWebDavServer(serverData: AddServerInput): Promise<WebDavServerConfig> {
   try {
-    // 构建配置对象（不包含 ID，后端会自动生成）
-    const config: Partial<WebDavServerConfig> = {
+    // 构建输入对象（与 Rust 的 AddServerInput 结构体对应）
+    const input = {
       name: serverData.name,
       url: serverData.url,
       username: serverData.username,
       useHttps: serverData.useHttps,
       timeout: serverData.timeout,
       enabled: serverData.enabled ?? true,
-      // 以下字段由后端自动设置
       lastTestStatus: 'unknown',
       serverType: 'generic',
     }
 
     const result = await invoke<WebDavServerConfig>('add_webdav_server', {
-      config,
+      input,
       password: serverData.password,
     })
 
