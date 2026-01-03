@@ -4,6 +4,7 @@
       "ok": "OK",
       "cancel": "Cancel",
       "save": "Save",
+      "loading": "Loading...",
       "write_clipboard": "Write to Clipboard",
       "plugin": "Plugin",
       "coming": "Coming soon...",
@@ -40,16 +41,34 @@
       "lastTest": "Last Test",
       "actions": "Actions",
       "testConnection": "Test Connection",
+      "testing": "Testing...",
       "edit": "Edit",
       "delete": "Delete",
-      "confirmDelete": "Are you sure you want to delete this server configuration?",
+      "confirmDelete": "Are you sure you want to delete server \"{{name}}\"?",
       "noServers": "No servers configured",
       "addFirstServer": "Add your first WebDAV server to start syncing files",
+      "emptyState": "No servers configured",
+      "emptyStateHint": "Click the button above to add your first WebDAV server",
       "errors": {
         "requiredField": "This field is required",
         "invalidUrl": "Invalid URL format, must include http:// or https://",
         "timeoutRange": "Timeout must be between 1-300 seconds",
-        "unknown": "Unknown error"
+        "authFailed": "Authentication failed, please check username and password",
+        "networkError": "Network connection failed",
+        "timeout": "Connection timeout",
+        "serverInUse": "This server is being used by sync folders and cannot be deleted",
+        "unknown": "Unknown error",
+        "loadFailed": "Failed to load server list",
+        "addFailed": "Failed to add server",
+        "updateFailed": "Failed to update server",
+        "deleteFailed": "Failed to delete server",
+        "testFailed": "Connection test failed"
+      },
+      "success": {
+        "added": "Server added successfully",
+        "updated": "Server updated successfully",
+        "deleted": "Server deleted successfully",
+        "connectionSuccess": "Connection test successful"
       }
     },
     "folders": {
