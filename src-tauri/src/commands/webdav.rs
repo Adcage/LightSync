@@ -6,12 +6,43 @@ use tauri::AppHandle;
 use crate::database::WebDavServerConfig;
 use crate::error::Result;
 
+// ========== 输入数据结构 ==========
+
+/// 添加服务器时的输入数据（不包含自动生成的字段）
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AddServerInput {
+    /// 服务器名称
+    pub name: String,
+    /// 服务器 URL)
+    pub url: String,
+    /// 用户名
+    pub username: String,
+    /// 是否使用 HTTPS
+    pub use_https: bool,
+    /// 连接超时时间（秒）:
+    pub timeout: u32,
+    /// 最后连接测试状态（可选，默认 "unknown"）
+    #[serde(default)]
+    pub last_test_status: String,
+    /// 服务器类型（可选，默认 "generic"）
+    #[serde(default)]
+    pub server_type: String,
+    /// 是否启用（可选，默认 true）
+    #[serde(default = "default_enabled")]
+    pub enabled: bool,
+}
+
+fn default_enabled() -> bool {
+    true
+}
+
 // ========== 服务器配置 CRUD 操作 ==========
 
 /// 添加 WebDAV 服务器配置
 ///
 /// # 参数
-/// - config: 服务器配置信息（id 字段会被忽略，自动生成新的 UUID）
+/// - input: 服务器配置信息（不包含 id、时间戳等自动生成的字段）
 /// - password: 服务器密码（将存储到 Keyring）
 ///
 /// # 返回
@@ -19,7 +50,7 @@ use crate::error::Result;
 /// - 失败：返回错误信息
 #[tauri::command]
 pub async fn add_webdav_server(
-    mut config: WebDavServerConfig,
+    input: AddServerInput,
     password: String,
     app: AppHandle,
 ) -> Result<WebDavServerConfig> {
@@ -29,20 +60,34 @@ pub async fn add_webdav_server(
 
     // 1. 生成新的 UUID
     let server_id = Uuid::new_v4().to_string();
-    config.id = server_id.clone();
 
     // 2. 设置时间戳
     let now = chrono::Utc::now().timestamp();
-    config.created_at = now;
-    config.updated_at = now;
 
-    // 3. 设置默认值
-    if config.last_test_status.is_empty() {
-        config.last_test_status = "unknown".to_string();
-    }
-    if config.server_type.is_empty() {
-        config.server_type = "generic".to_string();
-    }
+    // 3. 构建完整的服务器配置
+    let config = WebDavServerConfig {
+        id: server_id.clone(),
+        name: input.name,
+        url: input.url,
+        username: input.username,
+        use_https: input.use_https,
+        timeout: input.timeout,
+        last_test_at: None,
+        last_test_status: if input.last_test_status.is_empty() {
+            "unknown".to_string()
+        } else {
+            input.last_test_status
+        },
+        last_test_error: None,
+        server_type: if input.server_type.is_empty() {
+            "generic".to_string()
+        } else {
+            input.server_type
+        },
+        enabled: input.enabled,
+        created_at: now,
+        updated_at: now,
+    };
 
     // 4. 验证配置（会在 insert_webdav_server 中执行）
     // 5. 插入数据库
@@ -528,7 +573,7 @@ mod tests {
             let id = Uuid::new_v4().to_string();
 
             assert!(!id.is_empty());
-            assert!(1
+            assert!(
                 Uuid::parse_str(&id).is_ok(),
                 "Server ID should be a valid UUID"
             );

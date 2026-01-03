@@ -24,10 +24,6 @@ pub mod test_utils;
 pub use error::{Result, SyncError};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-#[tauri::command]
-fn greet(name: &str) -> String {
-    format!("Hello, {}! You've been greeted from Rust!", name)
-}
 
 /// 测试错误处理系统的命令
 /// 返回一个成功的结果
@@ -89,7 +85,6 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            greet,
             test_error_success,
             test_error_failure,
             // 配置管理命令
