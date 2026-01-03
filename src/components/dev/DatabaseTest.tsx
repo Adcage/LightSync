@@ -18,7 +18,7 @@ import {
   type SyncLog,
   updateSyncSession,
   upsertFileMetadata,
-} from '@/utils/database'
+} from '@/utils/database.ts'
 
 export default function DatabaseTest() {
   const [loading, setLoading] = useState(false)

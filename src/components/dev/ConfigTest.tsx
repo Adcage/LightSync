@@ -6,8 +6,8 @@
 
 import { useEffect, useState } from 'react'
 import { Button, Card, CardBody, CardHeader, Divider, Input, Spinner } from '@nextui-org/react'
-import { useConfig, useLanguage, useSyncFolders, useTheme, useWebDavServers } from '@/hooks/useConfig'
-import type { SyncFolderConfig, WebDavServerConfig } from '@/types/config'
+import { useConfig, useLanguage, useSyncFolders, useTheme, useWebDavServers } from '@/hooks/useConfig.ts'
+import type { SyncFolderConfig, WebDavServerConfig } from '@/types/config.ts'
 import { invoke } from '@tauri-apps/api/core'
 
 export default function ConfigTest() {

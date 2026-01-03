@@ -6,8 +6,8 @@ const LanguageSwitch: React.FC = () => {
   const { language, setLanguage } = useLanguage()
 
   const languages = [
-    { key: 'en', label: 'English' },
     { key: 'zh_cn', label: '简体中文' },
+    { key: 'en', label: 'English' },
     // Add other languages here
   ]
 
