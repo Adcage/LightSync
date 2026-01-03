@@ -6,12 +6,12 @@ mod config;
 mod config_watcher;
 // 常量定义模块
 mod constants;
-// 数据库操作模块
-mod database;
+// 数据库操作模块（公开以供测试使用）
+pub mod database;
 // 系统信息模块
 mod system;
-// WebDAV 模块
-mod webdav;
+// WebDAV 模块（公开以供测试使用）
+pub mod webdav;
 // Tauri 命令模块（导入宏）
 #[macro_use]
 pub mod commands;
