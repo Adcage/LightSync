@@ -21,6 +21,7 @@ import {
   SelectItem,
   Switch,
   Textarea,
+  Tooltip,
 } from '@nextui-org/react'
 import { useTranslation } from 'react-i18next'
 import { FolderOpen, Plus, Edit, Trash2, Play, Pause, XCircle, ArrowUpDown } from 'lucide-react'
@@ -441,36 +442,42 @@ const SyncFoldersPage: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <div className='flex gap-2'>
-                        <Button
-                          isIconOnly
-                          size='sm'
-                          color='primary'
-                          variant='light'
-                          isDisabled={!item.enabled}
-                          onPress={() => handleSyncNow(item.id)}
-                        >
-                          <Play className='h-4 w-4' />
-                        </Button>
+                        <Tooltip content={t('folders.syncNow', '立即同步')} placement='top'>
+                          <Button
+                            isIconOnly
+                            size='sm'
+                            color='primary'
+                            variant='light'
+                            isDisabled={!item.enabled}
+                            onPress={() => handleSyncNow(item.id)}
+                          >
+                            <Play className='h-4 w-4' />
+                          </Button>
+                        </Tooltip>
 
-                        <Button
-                          isIconOnly
-                          size='sm'
-                          color='warning'
-                          variant='light'
-                          onPress={() => handleEditFolder(item)}
-                        >
-                          <Edit className='h-4 w-4' />
-                        </Button>
+                        <Tooltip content={t('folders.edit', '编辑')} placement='top'>
+                          <Button
+                            isIconOnly
+                            size='sm'
+                            color='warning'
+                            variant='light'
+                            onPress={() => handleEditFolder(item)}
+                          >
+                            <Edit className='h-4 w-4' />
+                          </Button>
+                        </Tooltip>
 
-                        <Button
-                          isIconOnly
-                          size='sm'
-                          color='danger'
-                          variant='light'
-                          onPress={() => handleDeleteFolder(item.id)}
-                        >
-                          <Trash2 className='h-4 w-4' />
-                        </Button>
+                        <Tooltip content={t('folders.delete', '删除')} placement='top'>
+                          <Button
+                            isIconOnly
+                            size='sm'
+                            color='danger'
+                            variant='light'
+                            onPress={() => handleDeleteFolder(item.id)}
+                          >
+                            <Trash2 className='h-4 w-4' />
+                          </Button>
+                        </Tooltip>
                       </div>
                     </TableCell>
                   </TableRow>

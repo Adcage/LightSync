@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Button, Card, CardBody, CardHeader, Chip, Divider, Switch } from '@nextui-org/react'
 import { listen } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
-import { isDevelopmentMode } from '@/utils/system'
+import { isDevelopmentMode } from '@/utils/system.ts'
 
 /**
  * 调试面板组件

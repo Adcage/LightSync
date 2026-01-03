@@ -1,6 +1,6 @@
 import React from 'react'
 import { Chip } from '@nextui-org/react'
-import { useEnvironment } from '@/hooks/useEnvironment'
+import { useEnvironment } from '@/hooks/useEnvironment.ts'
 
 /**
  * 环境徽章组件

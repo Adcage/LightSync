@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
-import { getOsType } from '@/utils/system'
-import WindowControl from './WindowControl'
+import { getOsType } from '@/utils/system.ts'
+import WindowControl from './WindowControl.tsx'
 
 export const TitleBar = () => {
   const [osType, setOsType] = useState<string>('')
