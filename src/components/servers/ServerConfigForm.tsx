@@ -5,7 +5,7 @@ import type { AddServerInput } from '@/utils/webdav.ts'
 
 interface ServerConfigFormProps {
   mode: 'add' | 'edit'
-  initialData?: Partial<AddServerInput>
+  initialData?: Partial<Omit<AddServerInput, 'password'>>
   onSubmit: (config: AddServerInput, password: string) => Promise<void>
   onCancel: () => void
 }
