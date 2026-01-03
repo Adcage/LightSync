@@ -1,0 +1,18 @@
+{
+  "enabled": true,
+  "name": "i18n 文本配置检查",
+  "description": "当前端界面代码中添加固定显示的文本（如 '添加'、'删除' 等）时，检查是否使用了 i18n 配置，如果存在未配置的内容，需要添加到对应的 JSON 配置文件中",
+  "version": "1",
+  "when": {
+    "type": "fileEdited",
+    "patterns": [
+      "src/components/**/*.tsx",
+      "src/pages/**/*.tsx",
+      "src/layouts/**/*.tsx"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "检查这个文件中是否有硬编码的中文文本（如 '添加'、'删除'、'保存'、'取消' 等常见的 UI 文本）。如果有硬编码的文本，请：\n1. 确认这些文本是否应该被国际化\n2. 如果应该被国际化，检查 src/i18n/locales 目录中的配置文件是否已包含这些文本的 i18n key\n3. 如果配置文件中缺少这些 key，请将其添加到对应的 JSON 配置文件中（通常是 zh_CN.json 和 en_US.json）\n4. 建议将硬编码文本替换为 i18n 调用\n\n请提供具体的修改建议。"
+  }
+}
